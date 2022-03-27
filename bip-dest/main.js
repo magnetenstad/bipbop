@@ -1,2 +1,3 @@
+import * as std from './std.js'
 
-console.log('Hello world!')
+std.print('Hello world!')
