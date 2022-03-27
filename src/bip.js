@@ -1,5 +1,5 @@
 
-export function compileBipToJson(data) {
+export function compileBipToJavaScript(data) {
 
   return data
 }
