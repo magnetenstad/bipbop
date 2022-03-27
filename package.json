@@ -1,0 +1,25 @@
+{
+  "name": "funlang",
+  "version": "1.0.0",
+  "description": "Might become a programming language",
+  "main": "src/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/main.js",
+    "bip": "node src/main.js && node bip-dest/main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/magnetenstad/funlang.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/magnetenstad/funlang/issues"
+  },
+  "homepage": "https://github.com/magnetenstad/funlang#readme",
+  "dependencies": {
+    "virtual-file-system": "^1.1.5"
+  }
+}
