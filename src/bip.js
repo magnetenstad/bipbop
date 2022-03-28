@@ -1,6 +1,6 @@
 
 const definitions = []
-const delimiters = [';', '{', '}', '(', ')', '\'', '\"']
+const delimiters = [';', '{', '}', '(', ')', '\'', '\"', ',']
 const operators = ['=', '+', '-', '*', '/', '+=', '-=', '*=', '/=']
 
 export function bipToJs(data) {
@@ -60,9 +60,19 @@ function transpile(ast) {
   console.log('Transpile', ast)
   let data = ''
   if (ast.type === 'statement') {
+    
+    let delimiterPrev = true
     ast.children.forEach((token) => {
-      data += token.value + ' '
+      const delimiter = token.type === 'delimiter'
+      data += (!(delimiterPrev || delimiter) ? ' ' : '') + token.value
+      delimiterPrev = delimiter
     })
+
+    if (ast.children[1].value == '='
+        && !definitions.includes(ast.children[0])) {
+      return 'let ' + data + ';\n'
+    }
+
     return data + ';\n'
   }
   ast.children.forEach((child) => {

@@ -1,4 +1,4 @@
 
-export function print(x) {
-  console.log(x)
+export function print(...x) {
+  console.log(...x)
 }
