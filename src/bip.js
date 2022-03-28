@@ -10,8 +10,10 @@ export function bipToJs(data) {
 }
 
 function lexer(data) {
+  data = data.replaceAll('{', ';{')
+  data = data.replaceAll('}', '};')
   delimiters.forEach((d) => data = data.replaceAll(d, ` ${d} `))
-  return data.split(' ').map((item) => {
+  return data.split(' ').filter(e => e !== '').map((item) => {
     return tokenize(item.trim())
   })
 }
@@ -58,25 +60,51 @@ function parser(tokens) {
 
 function transpile(ast) {
   console.log('Transpile', ast)
-  let data = ''
-  if (ast.type === 'statement') {
+  
+  if (ast.children.length && ast.type === 'statement') {
     
-    let delimiterPrev = true
-    ast.children.forEach((token) => {
-      const delimiter = token.type === 'delimiter'
-      data += (!(delimiterPrev || delimiter) ? ' ' : '') + token.value
-      delimiterPrev = delimiter
-    })
-
-    if (ast.children[1].value == '='
-        && !definitions.includes(ast.children[0])) {
-      return 'let ' + data + ';\n'
+    if (ast.children.length === 1 && ast.children[0].value === ':') {
+      return 'else '
     }
 
-    return data + ';\n'
+    if (ast.children.length > 1 
+        && ast.children[1].value === '='
+        && !definitions.includes(ast.children[0])) {
+      return 'let ' + joinTokens(ast.children) + ';\n'
+    }
+
+    const last = ast.children[ast.children.length - 1]
+    if (last.value === '?') {
+
+      if (ast.children[0].value === ':') {
+        return 'else if (' 
+        + joinTokens(ast.children.slice(1, ast.children.length - 1))
+        + ') '
+      }
+
+      return 'if (' 
+          + joinTokens(ast.children.slice(0, ast.children.length - 1))
+          + ') '
+    }
+
+    return joinTokens(ast.children) + (last.value == '}' ? '\n' : ';\n')
   }
+  
+  let data = ''
   ast.children.forEach((child) => {
     data += transpile(child)
+  })
+
+  return data
+}
+
+function joinTokens(tokens) {
+  let data = ''
+  let delimiterPrev = true
+  tokens.forEach((token) => {
+    const delimiter = token.type === 'delimiter'
+    data += (!(delimiterPrev || delimiter) ? ' ' : '') + token.value
+    delimiterPrev = delimiter
   })
   return data
 }

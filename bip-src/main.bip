@@ -1,6 +1,17 @@
 
 x = 5;
-x += 1;
+x += 2;
 y = x + 5;
 
-std.print('Hello world!', x, y);
+x == 6 ? {
+  std.print('x is 6');
+} : x == 7 ? {
+  std.print('x is 7');
+} : {
+  x > 7 ? {
+    std.print('x is larger than 7');
+  } : {
+    std.print('x is not larger than 7');
+  }
+}
+
