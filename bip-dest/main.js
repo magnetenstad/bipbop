@@ -1,3 +1,5 @@
 import * as std from './std.js'
-
-std.print('Hello world!')
+x = 5 ;
+x += 1 ;
+y = x + 5 ;
+std.print (  ' Hello world! '  )  ;
