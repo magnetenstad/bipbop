@@ -1,3 +1,4 @@
+import { isEmptyToken } from './util.js'
 
 const delimiters = [';', '{', '}', '(', ')', '\'', '\"', ',']
 const operators = ['=', '+', '-', '*', '/', '+=', '-=', '*=', '/=', '>_']
@@ -11,7 +12,7 @@ export function runBip(data) {
 
 function lex(data) {
   delimiters.forEach((d) => data = data.replaceAll(d, ` ${d} `))
-  return data.split(' ').filter(e => !isWhiteSpace(e)).map((item) => {
+  return data.split(' ').map((item) => {
     return tokenize(item.trim())
   })
 }
@@ -31,8 +32,6 @@ function tokenize(item) {
 }
 
 function parseTokens(tokens) {
-  // console.log('Parse', tokens)
-  
   let startString = -1
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i]
@@ -51,6 +50,8 @@ function parseTokens(tokens) {
       }
     }
   }
+
+  tokens = tokens.filter(t => !isEmptyToken(t))
 
   while (true) {
     let curlyStart = -1
@@ -238,8 +239,4 @@ function executeExpression(expression, vars=null) {
   } else {
     expression.value = expression.children[0].value
   }
-}
-
-function isWhiteSpace(str) {
-  return ['', '\n'].includes(str.trim())
 }

@@ -1,9 +1,10 @@
 
 sayTwice = (text) -> {
-  >_ (text + '_' + text);
+  >_ (text);
+  >_ (text);
 };
 
-x = 'Hello world!';
+x = ('Hello' + ' ' + 'world!');
 
 {
   sayTwice(x);
