@@ -1,14 +1,14 @@
 
-{
-  {
-    a;
-  }
-  b;
-  {
-    c;
-  }
-}
+sayTwice = (text) -> {
+  >_ (text + '_' + text);
+};
+
+x = 'Hello world!';
 
 {
-  d;
+  sayTwice(x);
+  x = 'Ok buddy';
+  sayTwice(x);
 }
+
+sayTwice(x);
