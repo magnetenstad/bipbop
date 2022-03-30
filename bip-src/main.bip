@@ -1,15 +1,18 @@
 
-sayTwice = (text) -> {
+printTwice = (text) -> {
   >_ (text);
   >_ (text);
 };
 
+printTwice('test');
+
 x = ('Hello' + ' ' + 'world!');
 
 {
-  sayTwice(x);
+  printTwice(x);
   x = 'Ok buddy';
-  sayTwice(x);
+  printTwice(x);
 }
 
-sayTwice(x);
+printTwice(x);
+

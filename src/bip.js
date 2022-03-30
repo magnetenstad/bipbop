@@ -207,7 +207,7 @@ function executeFunction(func, args, vars=null) {
     if (vars.get(args[i].name)) {
       vars.set(func.from.children[i].name, vars.get(args[i].name))
     } else {
-      vars.set(func.from.children[i].name, args[i].name)
+      vars.set(func.from.children[i].name, args[i])
     }
   }
 
