@@ -5,7 +5,8 @@ const dir = Directory.read('bip-src')
 
 dir.apply((file) => {
   if (file.name.includes('.bip')) {
-    console.log(`Running ${file.name}`)
+    console.log(`Running ${file.name}\n`)
     runBip(file.data)
+    console.log(`\nFinished running ${file.name}\n`)
   }
 })

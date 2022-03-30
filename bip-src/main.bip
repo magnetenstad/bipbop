@@ -1,20 +1,18 @@
 
-printTwice :: (text) -> {
-  >_ (text);
-  >_ (text);
+greet :: (name) -> {
+  >_ ('Hello ' + name + '!');
 };
 
-printTwice('test');
+greet('World');
 
-x = ('Hello' + ' ' + 'world!');
-
-{
-  printTwice(x);
-  x = 'Ok buddy';
-  printTwice(x);
+printSum :: (a, b) -> {
+  >_ (a + b);
 };
 
-printTwice(x);
+printSum(2, 3);
 
 y = (1 + 2 * 2 - 3 / 3 + (1 + 1) / 2);
-printTwice(y);
+
+printSum(y, y);
+
+greet(y);

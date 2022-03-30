@@ -6,7 +6,7 @@ const operators = ['=', '::', '+', '-', '*', '/', '+=', '-=', '*=', '/=', '>_']
 export function runBip(data) {
   const tokens = lex('{' + data + '}')
   const ast = parseTokens(tokens)
-  console.log(JSON.stringify(ast, null, 2))
+  // console.log(JSON.stringify(ast, null, 2))
   executeAst(ast)
 }
 
@@ -243,10 +243,6 @@ function executeExpression(expression, vars=null) {
     vars = new Map()
   }
 
-  if (expression.children.length > 1) {
-    console.warn('Expression should only have a single child!')
-  }
-
   for (let child of expression.children) {
 
     if (vars.get(child.name)) {
@@ -261,7 +257,9 @@ function executeExpression(expression, vars=null) {
     }
   }
   
-  expression.value = expression.children[0].value
+  if (expression.children.length == 1) {
+    expression.value = expression.children[0].value
+  }
 }
 
 function executeOperator(operator, vars=null) {
