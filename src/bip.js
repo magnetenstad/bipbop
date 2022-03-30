@@ -1,19 +1,17 @@
 
-const definitions = []
 const delimiters = [';', '{', '}', '(', ')', '\'', '\"', ',']
-const operators = ['=', '+', '-', '*', '/', '+=', '-=', '*=', '/=']
+const operators = ['=', '+', '-', '*', '/', '+=', '-=', '*=', '/=', '>_']
 
-export function bipToJs(data) {
-  const tokens = lexer(data)
-  const ast = parser(tokens)
-  return 'import * as std from \'./std.js\'\n' + transpile(ast)
+export function runBip(data) {
+  const tokens = lex('{' + data + '}')
+  const ast = parseTokens(tokens)
+  console.log(JSON.stringify(ast, null, 2))
+  executeAst(ast)
 }
 
-function lexer(data) {
-  data = data.replaceAll('{', ';{')
-  data = data.replaceAll('}', '};')
+function lex(data) {
   delimiters.forEach((d) => data = data.replaceAll(d, ` ${d} `))
-  return data.split(' ').filter(e => e !== '').map((item) => {
+  return data.split(' ').filter(e => !isWhiteSpace(e)).map((item) => {
     return tokenize(item.trim())
   })
 }
@@ -21,8 +19,7 @@ function lexer(data) {
 function tokenize(item) {
   const token = {
     type: '',
-    value: item,
-    children: []
+    name: item,
   }
   if (operators.includes(item)) {
     token.type = 'operator'
@@ -33,78 +30,216 @@ function tokenize(item) {
   return token
 }
 
-function parser(tokens) {
-  console.log('Parse', tokens)
-  const root = {
-    type: 'root',
-    value: '',
-    children: []
-  }
-  let depth = 0
-  let prev = -1
-  for (const [i, token] of tokens.entries() ) {  
-    if (token.value === '{') depth++
-    if (token.value === '}') depth--
-    if (depth == 0 && token.value === ';') {
-      root.children.push(parser(tokens.slice(prev + 1, i)))
-      prev = i
-    }
-  }
-  if (!root.children.length) {
-    root.type = 'statement'
-    root.children = tokens
-  }
-
-  return root
-}
-
-function transpile(ast) {
-  console.log('Transpile', ast)
+function parseTokens(tokens) {
+  // console.log('Parse', tokens)
   
-  if (ast.children.length && ast.type === 'statement') {
-    
-    if (ast.children.length === 1 && ast.children[0].value === ':') {
-      return 'else '
+  let startString = -1
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]
+    if (token.name === '\'' || token.name === '\"') {
+      if (startString === -1) {
+        startString = i
+      } else {
+        const str = {
+          type: 'string',
+        }
+        const strContent = tokens.splice(startString, i + 1 - startString, str)
+        str.value = strContent.slice(1, strContent.length - 1)
+          .map(t => t.name).join(' ')
+        i = startString + 1
+        startString = -1
+      }
     }
+  }
 
-    if (ast.children.length > 1 
-        && ast.children[1].value === '='
-        && !definitions.includes(ast.children[0])) {
-      return 'let ' + joinTokens(ast.children) + ';\n'
-    }
+  while (true) {
+    let curlyStart = -1
+    let curlyEnd = -1
+    let roundStart = -1
+    let roundEnd = -1
+    for (const [i, token] of tokens.entries()) {  
+      if (token.name === '{') curlyStart = i
+      if (token.name === '(') roundStart = i
 
-    const last = ast.children[ast.children.length - 1]
-    if (last.value === '?') {
-
-      if (ast.children[0].value === ':') {
-        return 'else if (' 
-        + joinTokens(ast.children.slice(1, ast.children.length - 1))
-        + ') '
+      if (token.name === '}') {
+        curlyEnd = i
+        const block = {
+          type: 'block',
+        }
+        const blockContent = tokens.splice(
+            curlyStart, curlyEnd - curlyStart + 1, block)
+        block.children = parseBlock(
+            blockContent.slice(1, blockContent.length - 1))
+        break
       }
 
-      return 'if (' 
-          + joinTokens(ast.children.slice(0, ast.children.length - 1))
-          + ') '
+      if (token.name === ')') {
+        roundEnd = i
+        const block = {
+          type: 'expression',
+        }
+        const blockContent = tokens.splice(
+            roundStart, roundEnd - roundStart + 1, block)
+        block.children = blockContent.slice(1, blockContent.length - 1)
+        break
+      }
     }
-
-    return joinTokens(ast.children) + (last.value == '}' ? '\n' : ';\n')
+    if (curlyEnd + roundEnd === -2) {
+      break
+    }
   }
   
-  let data = ''
-  ast.children.forEach((child) => {
-    data += transpile(child)
-  })
-
-  return data
+  return tokens[0]
 }
 
-function joinTokens(tokens) {
-  let data = ''
-  let delimiterPrev = true
-  tokens.forEach((token) => {
-    const delimiter = token.type === 'delimiter'
-    data += (!(delimiterPrev || delimiter) ? ' ' : '') + token.value
-    delimiterPrev = delimiter
-  })
-  return data
+function parseBlock(tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]  
+    if (token.name === '->') {
+      const func = {
+        type: 'function',
+        from: tokens[i - 1],
+        to: tokens[i + 1]
+      }
+      tokens.splice(i - 1, 3, func)
+    }
+  }
+
+  const children = []
+  let start = 0
+  for (const [i, token] of tokens.entries()) {  
+    if (token.type === 'block') {
+      children.push(token)
+      start = i + 1
+      continue
+    }
+    if (token.name === ';' || i === tokens.length - 1) {
+      children.push({
+        type: 'statement',
+        children: parseStatement(
+            tokens.slice(start, i + (token.name === ';' ? 0 : 1)))
+      })
+      start = i + 1
+      continue
+    }
+  }
+  return children
+}
+
+function parseStatement(tokens) {
+
+  for (let token of tokens) {
+    if (token.type === 'expression') {
+      token.children = parseExpression(token.children)
+    }
+  }
+
+  return tokens
+}
+
+function parseExpression(tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]  
+    if (token.name === '+') {
+      const binop = {
+        type: 'binop_plus',
+        children: [tokens[i - 1], tokens[i + 1]]
+      }
+      tokens.splice(i - 1, 3, binop)
+      i -= 1
+    }
+  }
+  return tokens
+}
+
+function executeAst(ast, vars=null) {
+  if (vars === null) {
+    vars = new Map()
+  } else {
+    vars = new Map(vars)
+  }
+  
+  for (let child of ast.children) {
+    if (child.type === 'block') {
+      executeAst(child, vars)
+    }
+    if (child.type === 'statement') {
+      executeStatement(child, vars)
+    }
+  }
+}
+
+function executeStatement(stmt, vars=null) {
+  if (vars === null) {
+    vars = new Map()
+  }
+
+  for (let child of stmt.children) {
+    if (child.type === 'expression') {
+      executeExpression(child, vars)
+    }
+  }
+
+  if (stmt.children[1].name === '=') {
+    vars.set(stmt.children[0].name, stmt.children[2])
+    return
+  }
+
+  if (stmt.children[0].name === '>_') {
+    console.log(stmt.children[1].value)
+  }
+
+  const first = vars.get(stmt.children[0].name)
+  if (first && first.type === 'function') {
+    executeFunction(first, stmt.children[1].children, vars)
+  }
+}
+
+function executeFunction(func, args, vars=null) {
+  if (vars === null) {
+    vars = new Map()
+  } else {
+    vars = new Map(vars)
+  }
+
+  for (let i = 0; i < args.length; i++) {
+    if (vars.get(args[i].name)) {
+      vars.set(func.from.children[i].name, vars.get(args[i].name))
+    } else {
+      vars.set(func.from.children[i].name, args[i].name)
+    }
+  }
+
+  for (let stmt of func.to.children) {
+    executeStatement(stmt, vars)
+  }
+}
+
+function executeExpression(expression, vars=null) {
+  if (vars === null) {
+    vars = new Map()
+  }
+
+  for (let child of expression.children) {
+
+    if (vars.get(child.name)) {
+      child.value = vars.get(child.name).value
+    }
+
+    if (child.type === 'expression' || child.type === 'binop_plus') {
+      executeExpression(child, vars)
+    }
+  }
+  
+  if (expression.type === 'binop_plus') {
+    expression.value = 
+      expression.children[0].value + 
+      expression.children[1].value
+  } else {
+    expression.value = expression.children[0].value
+  }
+}
+
+function isWhiteSpace(str) {
+  return ['', '\n'].includes(str.trim())
 }
