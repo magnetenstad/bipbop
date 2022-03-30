@@ -1,14 +1,18 @@
 import { isEmptyToken } from './util.js'
 
 const delimiters = [';', '{', '}', '(', ')', '\'', '\"', ',']
-const operators = ['=', '::', '+', '-', '*', '/', '+=', '-=', '*=', '/=', '>_']
+const operators = 
+    ['=', '::', '+', '-', '*', '/', '+=', '-=', '*=', '/=', '>_', '>>']
+// const datatypes = ['int', 'float', 'string']
 
 export function runBip(data) {
   const tokens = lex('{' + data + '}')
   const ast = parseTokens(tokens)
   // console.log(JSON.stringify(ast, null, 2))
-  executeAst(ast)
+  interpret(ast)
 }
+
+// Lexing
 
 function lex(data) {
   delimiters.forEach((d) => data = data.replaceAll(d, ` ${d} `))
@@ -39,6 +43,8 @@ function tokenize(item) {
 
   return token
 }
+
+// Parsing
 
 function parseTokens(tokens) {
   let startString = -1
@@ -150,6 +156,7 @@ function parseExpression(tokens) {
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i]
     if (token.name === '*' || token.name === '/') {
+      token.type = 'operation'
       token.children = [tokens[i - 1], tokens[i + 1]]
       tokens.splice(i - 1, 3, token)
       i -= 1
@@ -158,6 +165,7 @@ function parseExpression(tokens) {
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i]
     if (token.name === '+' || token.name === '-') {
+      token.type = 'operation'
       token.children = [tokens[i - 1], tokens[i + 1]]
       tokens.splice(i - 1, 3, token)
       i -= 1
@@ -166,56 +174,92 @@ function parseExpression(tokens) {
   return tokens
 }
 
-function executeAst(ast, vars=null) {
-  if (vars === null) {
-    vars = new Map()
-  } else {
-    vars = new Map(vars)
-  }
-  
-  for (let child of ast.children) {
-    if (child.type === 'block') {
-      executeAst(child, vars)
-    }
-    if (child.type === 'statement') {
-      executeStatement(child, vars)
-    }
-  }
-}
+// Interpretation
 
-function executeStatement(stmt, vars=null) {
-  if (vars === null) {
-    vars = new Map()
-  }
+function interpret(node, vars=null, scope=false) {
 
-  if (stmt.children.length === 1 
-      && stmt.children[0].type === 'block') {
-    executeAst(stmt.children[0], vars)
-    return
-  }
+  vars = 
+      vars === null ? new Map()
+    : scope         ? new Map(vars)
+    : vars
 
-  for (let child of stmt.children) {
-    if (child.type === 'expression') {
-      executeExpression(child, vars)
-    }
-  }
-
-  if (stmt.children.length > 1) {
-    if (stmt.children[1].name === '=' || stmt.children[1].name === '::') {
-      vars.set(stmt.children[0].name, stmt.children[2])
-      return
-    }
-    const first = vars.get(stmt.children[0].name)
-    if (first && first.type === 'function') {
-      executeFunction(first, stmt.children[1].children, vars)
-      return
+  if (node.children) {
+    for (let i = 0; i < node.children.length; i++) {
+      const child = node.children[i]
+      const value = vars.get(child.name)
+      
+      if (value === undefined) {
+        const scope = ['block'].includes(child.type)
+        interpret(child, vars, scope)
+      } else {
+        if (value.type === 'function') {
+          let args = []
+          if (node.children[i + 1]
+              && node.children[i + 1].type === 'expression')
+          {
+            interpret(node.children[i + 1], vars)
+            args = node.children[i + 1].children
+            i += 1
+          }
+          executeFunction(value, args, vars)
+          child.value = value.value
+        } else {
+          child.value = vars.get(child.name).value
+        }
+      }
     }
   }
 
-  if (stmt.children.length > 0 &&
-    stmt.children[0].name === '>_') {
-    console.log(stmt.children[1].value)
-  }  
+  if (node.type === 'statement') {
+    if (node.children.length > 1) {
+      if (node.children[1].name === '=' || node.children[1].name === '::') {
+        vars.set(node.children[0].name, node.children[2])
+        return
+      }
+    }
+    if (node.children.length > 0) {
+      if (node.children[0].name === '>_') {
+        console.log(node.children.length > 1 ? node.children[1].value : '')
+      }
+      if (node.children[0].name === '>>') {
+        return {
+          message: 'return', 
+          value: node.children.length > 1 
+            ? node.children[1]
+            : null
+        }
+      }
+    }
+  }
+
+  if (node.type === 'expression') {
+    if (node.children.length > 0) {
+      node.value = node.children[0].value // TODO
+    }
+  }
+
+  if (node.type === 'operation') {
+    if (node.name === '+') {
+      node.value = 
+        node.children[0].value + 
+        node.children[1].value
+    }
+    if (node.name === '-') {
+      node.value = 
+        node.children[0].value - 
+        node.children[1].value
+    }
+    if (node.name === '*') {
+      node.value = 
+        node.children[0].value * 
+        node.children[1].value
+    }
+    if (node.name === '/') {
+      node.value = 
+        node.children[0].value / 
+        node.children[1].value
+    }
+  }
 }
 
 function executeFunction(func, args, vars=null) {
@@ -233,72 +277,11 @@ function executeFunction(func, args, vars=null) {
     }
   }
 
-  for (let stmt of func.to.children) {
-    executeStatement(stmt, vars)
-  }
-}
-
-function executeExpression(expression, vars=null) {
-  if (vars === null) {
-    vars = new Map()
-  }
-
-  for (let child of expression.children) {
-
-    if (vars.get(child.name)) {
-      child.value = vars.get(child.name).value
+  for (let node of func.to.children) {
+    const result = interpret(node, vars)
+    if (result !== undefined && result.message === 'return') {
+      func.value = result.value.value
+      return
     }
-
-    if (child.type === 'expression') {
-      executeExpression(child, vars)
-    }
-    if (child.type === 'operator') {
-      executeOperator(child, vars)
-    }
-  }
-  
-  if (expression.children.length == 1) {
-    expression.value = expression.children[0].value
-  }
-}
-
-function executeOperator(operator, vars=null) {
-  if (vars === null) {
-    vars = new Map()
-  }
-
-  for (let child of operator.children) {
-
-    if (vars.get(child.name)) {
-      child.value = vars.get(child.name).value
-    }
-
-    if (child.type === 'expression') {
-      executeExpression(child, vars)
-    }
-    if (child.type === 'operator') {
-      executeOperator(child, vars)
-    }
-  }
-  
-  if (operator.name === '+') {
-    operator.value = 
-      operator.children[0].value + 
-      operator.children[1].value
-  }
-  if (operator.name === '-') {
-    operator.value = 
-      operator.children[0].value - 
-      operator.children[1].value
-  }
-  if (operator.name === '*') {
-    operator.value = 
-      operator.children[0].value * 
-      operator.children[1].value
-  }
-  if (operator.name === '/') {
-    operator.value = 
-      operator.children[0].value / 
-      operator.children[1].value
   }
 }

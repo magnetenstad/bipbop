@@ -3,16 +3,18 @@ greet :: (name) -> {
   >_ ('Hello ' + name + '!');
 };
 
-greet('World');
-
-printSum :: (a, b) -> {
-  >_ (a + b);
+sum :: (a, b) -> {
+  >> (a + b);
 };
 
-printSum(2, 3);
+>_ 1;
 
-y = (1 + 2 * 2 - 3 / 3 + (1 + 1) / 2);
+greet('2');
 
-printSum(y, y);
+>_ (sum(2, 1));
+
+>_ sum(1, (sum(1, (sum(1, 1)))));
+
+y = (2 + 2 / 2 + 1 * 3 - 1);
 
 greet(y);
