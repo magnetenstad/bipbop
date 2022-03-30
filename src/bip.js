@@ -11,7 +11,7 @@ export function runBip(data) {
 
 function lex(data) {
   delimiters.forEach((d) => data = data.replaceAll(d, ` ${d} `))
-  return data.split(' ').filter(e => !isWhiteSpace(e)).map((item) => {
+  return data.split(' ').map((item) => {
     return tokenize(item.trim())
   })
 }
@@ -51,6 +51,8 @@ function parseTokens(tokens) {
       }
     }
   }
+
+  tokens = tokens.filter(t => !isEmptyToken(t))
 
   while (true) {
     let curlyStart = -1
@@ -242,4 +244,17 @@ function executeExpression(expression, vars=null) {
 
 function isWhiteSpace(str) {
   return ['', '\n'].includes(str.trim())
+}
+
+function isEmptyToken(token) {
+  if (token.type && !isWhiteSpace(token.type)) {
+    return false
+  }
+  if (token.name && !isWhiteSpace(token.name)) {
+    return false
+  }
+  if (token.value && !isWhiteSpace(token.value)) {
+    return false
+  }
+  return true
 }

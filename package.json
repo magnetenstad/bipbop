@@ -5,8 +5,7 @@
   "main": "src/main.js",
   "type": "module",
   "scripts": {
-    "start": "node src/main.js",
-    "bip": "node src/main.js && node bip-dest/main.js"
+    "start": "node src/main.js"
   },
   "repository": {
     "type": "git",
