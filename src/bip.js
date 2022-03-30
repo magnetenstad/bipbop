@@ -1,3 +1,4 @@
+import { isEmptyToken } from './util.js'
 
 const delimiters = [';', '{', '}', '(', ')', '\'', '\"', ',']
 const operators = ['=', '+', '-', '*', '/', '+=', '-=', '*=', '/=', '>_']
@@ -31,8 +32,6 @@ function tokenize(item) {
 }
 
 function parseTokens(tokens) {
-  // console.log('Parse', tokens)
-  
   let startString = -1
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i]
@@ -240,21 +239,4 @@ function executeExpression(expression, vars=null) {
   } else {
     expression.value = expression.children[0].value
   }
-}
-
-function isWhiteSpace(str) {
-  return ['', '\n'].includes(str.trim())
-}
-
-function isEmptyToken(token) {
-  if (token.type && !isWhiteSpace(token.type)) {
-    return false
-  }
-  if (token.name && !isWhiteSpace(token.name)) {
-    return false
-  }
-  if (token.value && !isWhiteSpace(token.value)) {
-    return false
-  }
-  return true
 }
