@@ -1,5 +1,5 @@
 
-printTwice = (text) -> {
+printTwice :: (text) -> {
   >_ (text);
   >_ (text);
 };
@@ -12,7 +12,9 @@ x = ('Hello' + ' ' + 'world!');
   printTwice(x);
   x = 'Ok buddy';
   printTwice(x);
-}
+};
 
 printTwice(x);
 
+y = (1 + 2 * 2 - 3 / 3 + (1 + 1) / 2);
+printTwice(y);

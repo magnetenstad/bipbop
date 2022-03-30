@@ -1,7 +1,7 @@
 import { isEmptyToken } from './util.js'
 
 const delimiters = [';', '{', '}', '(', ')', '\'', '\"', ',']
-const operators = ['=', '+', '-', '*', '/', '+=', '-=', '*=', '/=', '>_']
+const operators = ['=', '::', '+', '-', '*', '/', '+=', '-=', '*=', '/=', '>_']
 
 export function runBip(data) {
   const tokens = lex('{' + data + '}')
@@ -25,9 +25,18 @@ function tokenize(item) {
   if (operators.includes(item)) {
     token.type = 'operator'
   }
-  if (delimiters.includes(item)) {
+  else if (delimiters.includes(item)) {
     token.type = 'delimiter'
   }
+  else if (!isNaN(parseInt(token.name))) {
+    token.type = 'int'
+    token.value = parseInt(token.name)
+  }
+  else if (!isNaN(parseFloat(token.name))) {
+    token.type = 'float'
+    token.value = parseFloat(token.name)
+  }
+
   return token
 }
 
@@ -109,11 +118,6 @@ function parseBlock(tokens) {
   const children = []
   let start = 0
   for (const [i, token] of tokens.entries()) {  
-    if (token.type === 'block') {
-      children.push(token)
-      start = i + 1
-      continue
-    }
     if (token.name === ';' || i === tokens.length - 1) {
       children.push({
         type: 'statement',
@@ -128,25 +132,34 @@ function parseBlock(tokens) {
 }
 
 function parseStatement(tokens) {
-
   for (let token of tokens) {
     if (token.type === 'expression') {
       token.children = parseExpression(token.children)
     }
   }
-
   return tokens
 }
 
 function parseExpression(tokens) {
   for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i]  
-    if (token.name === '+') {
-      const binop = {
-        type: 'binop_plus',
-        children: [tokens[i - 1], tokens[i + 1]]
-      }
-      tokens.splice(i - 1, 3, binop)
+    const token = tokens[i]
+    if (token.type === 'expression') {
+      token.children = parseExpression(token.children)
+    }
+  }
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]
+    if (token.name === '*' || token.name === '/') {
+      token.children = [tokens[i - 1], tokens[i + 1]]
+      tokens.splice(i - 1, 3, token)
+      i -= 1
+    }
+  }
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]
+    if (token.name === '+' || token.name === '-') {
+      token.children = [tokens[i - 1], tokens[i + 1]]
+      tokens.splice(i - 1, 3, token)
       i -= 1
     }
   }
@@ -175,25 +188,34 @@ function executeStatement(stmt, vars=null) {
     vars = new Map()
   }
 
+  if (stmt.children.length === 1 
+      && stmt.children[0].type === 'block') {
+    executeAst(stmt.children[0], vars)
+    return
+  }
+
   for (let child of stmt.children) {
     if (child.type === 'expression') {
       executeExpression(child, vars)
     }
   }
 
-  if (stmt.children[1].name === '=') {
-    vars.set(stmt.children[0].name, stmt.children[2])
-    return
+  if (stmt.children.length > 1) {
+    if (stmt.children[1].name === '=' || stmt.children[1].name === '::') {
+      vars.set(stmt.children[0].name, stmt.children[2])
+      return
+    }
+    const first = vars.get(stmt.children[0].name)
+    if (first && first.type === 'function') {
+      executeFunction(first, stmt.children[1].children, vars)
+      return
+    }
   }
 
-  if (stmt.children[0].name === '>_') {
+  if (stmt.children.length > 0 &&
+    stmt.children[0].name === '>_') {
     console.log(stmt.children[1].value)
-  }
-
-  const first = vars.get(stmt.children[0].name)
-  if (first && first.type === 'function') {
-    executeFunction(first, stmt.children[1].children, vars)
-  }
+  }  
 }
 
 function executeFunction(func, args, vars=null) {
@@ -221,22 +243,64 @@ function executeExpression(expression, vars=null) {
     vars = new Map()
   }
 
+  if (expression.children.length > 1) {
+    console.warn('Expression should only have a single child!')
+  }
+
   for (let child of expression.children) {
 
     if (vars.get(child.name)) {
       child.value = vars.get(child.name).value
     }
 
-    if (child.type === 'expression' || child.type === 'binop_plus') {
+    if (child.type === 'expression') {
       executeExpression(child, vars)
+    }
+    if (child.type === 'operator') {
+      executeOperator(child, vars)
     }
   }
   
-  if (expression.type === 'binop_plus') {
-    expression.value = 
-      expression.children[0].value + 
-      expression.children[1].value
-  } else {
-    expression.value = expression.children[0].value
+  expression.value = expression.children[0].value
+}
+
+function executeOperator(operator, vars=null) {
+  if (vars === null) {
+    vars = new Map()
+  }
+
+  for (let child of operator.children) {
+
+    if (vars.get(child.name)) {
+      child.value = vars.get(child.name).value
+    }
+
+    if (child.type === 'expression') {
+      executeExpression(child, vars)
+    }
+    if (child.type === 'operator') {
+      executeOperator(child, vars)
+    }
+  }
+  
+  if (operator.name === '+') {
+    operator.value = 
+      operator.children[0].value + 
+      operator.children[1].value
+  }
+  if (operator.name === '-') {
+    operator.value = 
+      operator.children[0].value - 
+      operator.children[1].value
+  }
+  if (operator.name === '*') {
+    operator.value = 
+      operator.children[0].value * 
+      operator.children[1].value
+  }
+  if (operator.name === '/') {
+    operator.value = 
+      operator.children[0].value / 
+      operator.children[1].value
   }
 }
