@@ -2,12 +2,6 @@
 const delimiters = [';', '{', '}', '(', ')', '\'', '\"', ',']
 const operators = ['=', '+', '-', '*', '/', '+=', '-=', '*=', '/=', '>_']
 
-export function bipToJs(data) {
-  const tokens = lex('{' + data + '}')
-  const ast = parseTokens(tokens)
-  return 'import * as std from \'./std.js\'\n' + transpile(ast)
-}
-
 export function runBip(data) {
   const tokens = lex('{' + data + '}')
   const ast = parseTokens(tokens)
