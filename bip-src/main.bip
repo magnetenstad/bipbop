@@ -11,7 +11,7 @@ assert :: (assertion, message) -> {
   (! assertion) ? {
     >_ message;
   };
-}
+};
 
 >_ 1;
 

@@ -35,7 +35,7 @@ assert :: (assertion, message) -> {
   (! assertion) ? {
     >_ message;
   };
-}
+};
 
 assert((y == 5), 'y should be five');
 assert((y != 5), 'never mind');
