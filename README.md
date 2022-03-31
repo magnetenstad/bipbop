@@ -7,14 +7,14 @@ no keywords, only symbols.
 
 ## Variables
 
-```
+```cpp
 x = 0;
 y = 'Hello world';
 ```
 
 ## Conditions
 
-```
+```cpp
 (y == 5) ? {
   >_ 'y is five!';
 };
@@ -22,7 +22,7 @@ y = 'Hello world';
 
 ## Functions
 
-```
+```cpp
 greet :: (name) -> {
   >_ ('Hello ' + name + '!');
 };
