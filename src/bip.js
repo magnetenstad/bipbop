@@ -1,9 +1,9 @@
 import { isEmptyToken } from './util.js'
 
 const delimiters = [';', '{', '}', '(', ')', '\'', '\"', ',']
-const operators = 
-    ['=', '::', '+', '-', '*', '/', '+=', '-=', '*=', '/=', '>_', '>>']
-// const datatypes = ['int', 'float', 'string']
+const operators = ['=', '::', '+', '-', '*', '/', '+=', '-=',
+    '*=', '/=', '>_', '>>', '==', '!=']
+// const datatypes = ['int', 'float', 'string', 'bool']
 
 export function runBip(data) {
   const tokens = lex('{' + data + '}')
@@ -39,6 +39,10 @@ function tokenize(item) {
   else if (!isNaN(parseFloat(token.name))) {
     token.type = 'float'
     token.value = parseFloat(token.name)
+  }
+  else if (token.name === 'true' || token.name === 'false') {
+    token.type = 'boolean'
+    token.value = token.name === 'true'
   }
 
   return token
@@ -119,6 +123,16 @@ function parseBlock(tokens) {
       }
       tokens.splice(i - 1, 3, func)
     }
+
+    if (token.name === '?') {
+      const cond = {
+        type: 'conditional',
+        condition: tokens[i - 1],
+        block: tokens[i + 1]
+      }
+      tokens.splice(i - 1, 3, cond)
+      cond.condition.children = parseExpression(cond.condition.children)
+    }
   }
 
   const children = []
@@ -165,6 +179,23 @@ function parseExpression(tokens) {
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i]
     if (token.name === '+' || token.name === '-') {
+      token.type = 'operation'
+      token.children = [tokens[i - 1], tokens[i + 1]]
+      tokens.splice(i - 1, 3, token)
+      i -= 1
+    }
+  }
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]
+    if (token.name === '!') {
+      token.type = 'operation'
+      token.children = [tokens[i + 1]]
+      tokens.splice(i, 2, token)
+    }
+  }
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]
+    if (token.name === '==' || token.name === '!=') {
       token.type = 'operation'
       token.children = [tokens[i - 1], tokens[i + 1]]
       tokens.splice(i - 1, 3, token)
@@ -218,7 +249,8 @@ function interpret(node, vars=null, scope=false) {
       }
     }
     if (node.children.length > 0) {
-      if (node.children[0].name === '>_') {
+      const first = node.children[0]
+      if (first.name === '>_') {
         console.log(node.children.length > 1 ? node.children[1].value : '')
       }
       if (node.children[0].name === '>>') {
@@ -227,6 +259,12 @@ function interpret(node, vars=null, scope=false) {
           value: node.children.length > 1 
             ? node.children[1]
             : null
+        }
+      }
+      if (first.type === 'conditional') {
+        interpret(first.condition, vars)
+        if (first.condition.value) {
+          interpret(first.block, vars)
         }
       }
     }
@@ -258,6 +296,19 @@ function interpret(node, vars=null, scope=false) {
       node.value = 
         node.children[0].value / 
         node.children[1].value
+    }
+    if (node.name === '==') {
+      node.value = 
+        node.children[0].value ==
+        node.children[1].value
+    }
+    if (node.name === '!=') {
+      node.value = 
+        node.children[0].value !=
+        node.children[1].value
+    }
+    if (node.name === '!') {
+      node.value = !node.children[0].value
     }
   }
 }

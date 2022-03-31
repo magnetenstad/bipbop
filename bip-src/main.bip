@@ -7,6 +7,12 @@ sum :: (a, b) -> {
   >> (a + b);
 };
 
+assert :: (assertion, message) -> {
+  (! assertion) ? {
+    >_ message;
+  };
+}
+
 >_ 1;
 
 greet('2');
@@ -18,3 +24,26 @@ greet('2');
 y = (2 + 2 / 2 + 1 * 3 - 1);
 
 greet(y);
+
+(true) ? {
+  >_ 'true is always true';
+};
+
+(! true) ? {
+  >_ 'false should not be true';
+};
+
+(!(! false)) ? {
+  >_ 'not not not';
+};
+
+(y == 5) ? {
+  >_ 'y is five!';
+};
+
+(y != 5) ? {
+  >_ 'y is not five!';
+};
+
+assert((y == 5), 'y should be five');
+assert((y != 5), 'never mind');

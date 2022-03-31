@@ -3,7 +3,7 @@
 Might become a programming language
 
 # Notation
-Keywords are lame.
+no keywords, only symbols.
 
 ## Variables
 
@@ -12,26 +12,33 @@ x = 0;
 y = 'Hello world';
 ```
 
+## Conditions
+
+```
+(y == 5) ? {
+  >_ 'y is five!';
+};
+```
+
 ## Functions
 
 ```
-printTwice = (text) -> {
-  >_ (text);
-  >_ (text);
+greet :: (name) -> {
+  >_ ('Hello ' + name + '!');
 };
 
-printTwice(y);
-```
+sum :: (a, b) -> {
+  >> (a + b);
+};
 
-## Loops
-
-```
-for i in range(0, 2):
-  pass
-
-i = 0..2 {
-
+assert :: (assertion, message) -> {
+  (! assertion) ? {
+    >_ message;
+  };
 }
+
+assert((y == 5), 'y should be five');
+assert((y != 5), 'never mind');
 ```
 
 ## Notes
