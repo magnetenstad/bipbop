@@ -8,7 +8,7 @@ const operators = ['=', '::', '+', '-', '*', '/', '+=', '-=',
 export function runBip(data) {
   const tokens = lex('{' + data + '}')
   const ast = parseTokens(tokens)
-  // console.log(JSON.stringify(ast, null, 2))
+  console.log(JSON.stringify(ast, null, 2))
   interpret(ast)
 }
 
@@ -43,6 +43,8 @@ function tokenize(item) {
   else if (token.name === 'true' || token.name === 'false') {
     token.type = 'boolean'
     token.value = token.name === 'true'
+  } else if (token.name.match(/^[A-Za-z]+$/)) {
+    token.type = 'var'
   }
 
   return token
@@ -157,6 +159,15 @@ function parseStatement(tokens) {
       token.children = parseExpression(token.children)
     }
   }
+  for (let i = 0; i < tokens.length - 1; i++) {
+    const token = tokens[i]
+    const token_next = tokens[i + 1]
+    if (token.type === 'var' && token_next.type === 'expression') {
+      const call = {type: 'call'}
+      call.children = tokens.splice(i, 2, call)
+      i -= 1
+    }
+  }
   return tokens
 }
 
@@ -202,6 +213,15 @@ function parseExpression(tokens) {
       i -= 1
     }
   }
+  for (let i = 0; i < tokens.length - 1; i++) {
+    const token = tokens[i]
+    const token_next = tokens[i + 1]
+    if (token.type === 'var' && token_next.type === 'expression') {
+      const call = {type: 'call'}
+      call.children = tokens.splice(i, 2, call)
+      i -= 1
+    }
+  }
   return tokens
 }
 
@@ -214,7 +234,12 @@ function interpret(node, vars=null, scope=false) {
     : scope         ? new Map(vars)
     : vars
 
-  if (node.children) {
+  if (node.children && node.children.length) {
+
+    if (node.children[0].name == '//') {
+      return
+    }
+
     for (let i = 0; i < node.children.length; i++) {
       const child = node.children[i]
       const value = vars.get(child.name)
@@ -223,22 +248,24 @@ function interpret(node, vars=null, scope=false) {
         const scope = ['block'].includes(child.type)
         interpret(child, vars, scope)
       } else {
-        if (value.type === 'function') {
-          let args = []
-          if (node.children[i + 1]
-              && node.children[i + 1].type === 'expression')
-          {
-            interpret(node.children[i + 1], vars)
-            args = node.children[i + 1].children
-            i += 1
-          }
-          executeFunction(value, args, vars)
-          child.value = value.value
-        } else {
-          child.value = vars.get(child.name).value
-        }
+        child.value = vars.get(child.name).value
       }
     }
+  }
+
+  if (['block', 'statement', 'expression'].includes(node.type)) {
+    if (node.children.length) {
+      node.value = node.children[node.children.length-1].value
+    }
+  }
+
+  if (node.type === 'call') {
+    const func = vars.get(node.children[0].name)
+    const args = node.children[1]
+    if (func.type !== 'function') console.warn('Expected a function')
+    interpret(args, vars)
+    executeFunction(func, args.children, vars)
+    node.value = func.value
   }
 
   if (node.type === 'statement') {
@@ -267,12 +294,6 @@ function interpret(node, vars=null, scope=false) {
           interpret(first.block, vars)
         }
       }
-    }
-  }
-
-  if (node.type === 'expression') {
-    if (node.children.length > 0) {
-      node.value = node.children[0].value // TODO
     }
   }
 
@@ -320,12 +341,14 @@ function executeFunction(func, args, vars=null) {
     vars = new Map(vars)
   }
 
-  for (let i = 0; i < args.length; i++) {
-    if (vars.get(args[i].name)) {
-      vars.set(func.from.children[i].name, vars.get(args[i].name))
-    } else {
-      vars.set(func.from.children[i].name, args[i])
-    }
+  for (let i = 0; i < func.from.children.length; i++) {
+
+    const value = 
+        i >= args.length       ? {type: 'null', value: null}
+      : vars.get(args[i].name) ? vars.get(args[i].name)
+      :                          args[i]
+    
+    vars.set(func.from.children[i].name, value)
   }
 
   for (let node of func.to.children) {

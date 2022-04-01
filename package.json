@@ -1,23 +1,23 @@
 {
-  "name": "funlang",
+  "name": "bipbop",
   "version": "1.0.0",
   "description": "Might become a programming language",
-  "main": "src/main.js",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
     "start": "node src/main.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/magnetenstad/funlang.git"
+    "url": "git+https://github.com/magnetenstad/bipbop.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/magnetenstad/funlang/issues"
+    "url": "https://github.com/magnetenstad/bipbop/issues"
   },
-  "homepage": "https://github.com/magnetenstad/funlang#readme",
+  "homepage": "https://github.com/magnetenstad/bipbop#readme",
   "dependencies": {
     "virtual-file-system": "^1.1.5"
   }

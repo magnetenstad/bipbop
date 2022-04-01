@@ -17,7 +17,7 @@ assert :: (assertion, message) -> {
 
 greet('2');
 
->_ (sum(2, 1));
+>_ sum(2, 1);
 
 >_ sum(1, (sum(1, (sum(1, 1)))));
 
@@ -37,13 +37,14 @@ greet(y);
   >_ 'not not not';
 };
 
+(y == 5) ? { >_ 'y is five!' };
+
 (y == 5) ? {
-  >_ 'y is five!';
+  >_ 'y is five!'
 };
 
-(y != 5) ? {
-  >_ 'y is not five!';
-};
+// z = ((y == 5) ? { >> 'five!' } : { >> 'not five!' });
+// z = (y == 5) ? 'five!' : 'not five!';
 
 assert((y == 5), 'y should be five');
 assert((y != 5), 'never mind');
