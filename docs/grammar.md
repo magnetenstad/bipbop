@@ -63,11 +63,19 @@ A-Za-z char
 [x] expression -> expression + expression
 [x] expression -> expression - expression
 
-[ ] statement -> word = expression;
+[x] tuple -> expression , expression
+[x] tuple -> tuple , expression
+[x] tuple -> ( tuple )
+
+[ ] array -> [ tuple ]
+[ ] assignment.tuple -> tuple = ---legal?---
+[ ] assignment.tuple.constant -> tuple :: ---legal?---
+
+[ ] statement -> assignment expression ;
+[ ] statement -> assignment.constant expression ;
+
 [ ] [statement] -> statement
 [ ] [statement] -> [statement] statement
 [ ] statement -> { [statement] }
 
-[ ] tuple -> expression , expression
-[ ] tuple -> ( tuple )
 ```

@@ -40,6 +40,9 @@ function parseTokens(tokens) {
     (tokens) => binaryOperatorExpressionRule(tokens, '/'),
     (tokens) => binaryOperatorExpressionRule(tokens, '+'),
     (tokens) => binaryOperatorExpressionRule(tokens, '-'),
+    tupleRule,
+    appendTupleRule,
+    parenthesisTupleRule,
   ]
   for (let i = 0; i < rulesB.length; i++) {
     if (rulesB[i](tokens)) {
@@ -100,7 +103,7 @@ function commentRule(tokens) {
         let end = i
         const token = { type: new Set(['comment']) }
         token.value = tokens
-          .splice(start, end - start + 1) //, token)
+          .splice(start, end - start + 1)
           .slice(1, end - start)
           .map(t => t.value)
           .join('')
@@ -234,6 +237,7 @@ function parenthesisExpressionRule(tokens) {
     if (tokens[i].value === '('
         && tokens[i + 1].type.has('expression')
         && tokens[i + 2].value === ')') {
+      tokens[i].type.add('parenthesis')
       tokens.splice(i, 3, tokens[i + 1])
       return true
     }
@@ -248,6 +252,46 @@ function binaryOperatorExpressionRule(tokens, operator) {
         && tokens[i + 2].type.has('expression')) {
       tokens[i + 1].type.add('expression')
       tokens[i + 1].children = [tokens[i], tokens[i + 2]]
+      tokens.splice(i, 3, tokens[i + 1])
+      return true
+    }
+  }
+  return false
+}
+
+function tupleRule(tokens) {
+  for (let i = 0; i < tokens.length - 2; i++) {
+    if (tokens[i].type.has('expression')
+        && tokens[i + 1].value === ','
+        && tokens[i + 2].type.has('expression')) {
+      tokens[i + 1].type.add('tuple')
+      tokens[i + 1].children = [tokens[i], tokens[i + 2]]
+      tokens.splice(i, 3, tokens[i + 1])
+      return true
+    }
+  }
+  return false
+}
+
+function appendTupleRule(tokens) {
+  for (let i = 0; i < tokens.length - 2; i++) {
+    if (tokens[i].type.has('tuple')
+        && tokens[i + 1].value === ','
+        && tokens[i + 2].type.has('expression')) {
+      tokens[i].children.push(tokens[i + 2])
+      tokens.splice(i + 1, 2)
+      return true
+    }
+  }
+  return false
+}
+
+function parenthesisTupleRule(tokens) {
+  for (let i = 0; i < tokens.length - 2; i++) {
+    if (tokens[i].value === '('
+        && tokens[i + 1].type.has('tuple')
+        && tokens[i + 2].value === ')') {
+      tokens[i].type.add('parenthesis')
       tokens.splice(i, 3, tokens[i + 1])
       return true
     }

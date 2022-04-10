@@ -43,8 +43,10 @@ greet(y);
   >_ 'y is five!'
 };
 
-// z = ((y == 5) ? { >> 'five!' } : { >> 'not five!' });
-// z = (y == 5) ? 'five!' : 'not five!';
+--- Some work in progress
+z = ((y == 5) ? { >> 'five!' } : { >> 'not five!' });
+z = (y == 5) ? 'five!' : 'not five!';
+---
 
 assert((y == 5), 'y should be five');
 assert((y != 5), 'never mind');
