@@ -43,6 +43,7 @@ function parseTokens(tokens) {
     tupleRule,
     appendTupleRule,
     parenthesisTupleRule,
+    functionCallRule,
   ]
   for (let i = 0; i < rulesB.length; i++) {
     if (rulesB[i](tokens)) {
@@ -224,7 +225,8 @@ function constantAssignmentRule(tokens) {
 function expressionRule(tokens) {
   for (let token of tokens) {
     if (!token.type.has('expression') &&
-        ['string', 'integer', 'float', 'word'].some(e => token.type.has(e))) {
+        ['string', 'integer', 'float', 'word', 'function.call']
+        .some(e => token.type.has(e))) {
       token.type.add('expression')
       return true
     }
@@ -237,7 +239,7 @@ function parenthesisExpressionRule(tokens) {
     if (tokens[i].value === '('
         && tokens[i + 1].type.has('expression')
         && tokens[i + 2].value === ')') {
-      tokens[i].type.add('parenthesis')
+      tokens[i + 1].type.add('parenthesis')
       tokens.splice(i, 3, tokens[i + 1])
       return true
     }
@@ -291,8 +293,21 @@ function parenthesisTupleRule(tokens) {
     if (tokens[i].value === '('
         && tokens[i + 1].type.has('tuple')
         && tokens[i + 2].value === ')') {
-      tokens[i].type.add('parenthesis')
+      tokens[i + 1].type.add('parenthesis')
       tokens.splice(i, 3, tokens[i + 1])
+      return true
+    }
+  }
+  return false
+}
+
+function functionCallRule(tokens) {
+  for (let i = 0; i < tokens.length - 1; i++) {
+    if (tokens[i].type.has('word')
+        && tokens[i + 1].type.has('parenthesis')) {
+      tokens[i].type.add('function.call')
+      tokens[i].children = [tokens[i + 1]]
+      tokens.splice(i + 1, 1)
       return true
     }
   }

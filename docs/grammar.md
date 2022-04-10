@@ -23,6 +23,7 @@ A-Za-z char
 ## Production rules, $R$
 
 ### A rules
+Almost just lexing
 ```
 [x] [raw] -> raw
 [x] [raw] -> [raw] raw
@@ -49,6 +50,7 @@ A-Za-z char
 ```
 
 ### B rules
+Truly parsing
 ```
 [x] assignment -> word =
 [x] assignment.constant -> word ::
@@ -56,8 +58,9 @@ A-Za-z char
 [x] expression -> integer
 [x] expression -> float
 [x] expression -> word
-
 [x] expression -> ( expression )
+[x] parenthesis -> ( expression )
+
 [x] expression -> expression * expression
 [x] expression -> expression / expression
 [x] expression -> expression + expression
@@ -66,6 +69,10 @@ A-Za-z char
 [x] tuple -> expression , expression
 [x] tuple -> tuple , expression
 [x] tuple -> ( tuple )
+[x] parenthesis -> ( tuple )
+
+[ ] function.call -> word parenthesis
+[ ] expression -> function.call
 
 [ ] array -> [ tuple ]
 [ ] assignment.tuple -> tuple = ---legal?---
