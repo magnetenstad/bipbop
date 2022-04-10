@@ -3,7 +3,7 @@
 export function runBip(data) {
   const tokens = lex(data)
   const ast = parseTokens(tokens)
-  console.log(ast)
+  console.log(JSON.stringify(ast, null, 2))
   // interpret(ast)
 }
 
@@ -35,6 +35,11 @@ function parseTokens(tokens) {
     assignmentRule,
     constantAssignmentRule,
     expressionRule,
+    parenthesisExpressionRule,
+    (tokens) => binaryOperatorExpressionRule(tokens, '*'),
+    (tokens) => binaryOperatorExpressionRule(tokens, '/'),
+    (tokens) => binaryOperatorExpressionRule(tokens, '+'),
+    (tokens) => binaryOperatorExpressionRule(tokens, '-'),
   ]
   for (let i = 0; i < rulesB.length; i++) {
     if (rulesB[i](tokens)) {
@@ -218,6 +223,32 @@ function expressionRule(tokens) {
     if (!token.type.has('expression') &&
         ['string', 'integer', 'float', 'word'].some(e => token.type.has(e))) {
       token.type.add('expression')
+      return true
+    }
+  }
+  return false
+}
+
+function parenthesisExpressionRule(tokens) {
+  for (let i = 0; i < tokens.length - 2; i++) {
+    if (tokens[i].value === '('
+        && tokens[i + 1].type.has('expression')
+        && tokens[i + 2].value === ')') {
+      tokens.splice(i, 3, tokens[i + 1])
+      return true
+    }
+  }
+  return false
+}
+
+function binaryOperatorExpressionRule(tokens, operator) {
+  for (let i = 0; i < tokens.length - 2; i++) {
+    if (tokens[i].type.has('expression')
+        && tokens[i + 1].value === operator
+        && tokens[i + 2].type.has('expression')) {
+      tokens[i + 1].type.add('expression')
+      tokens[i + 1].children = [tokens[i], tokens[i + 2]]
+      tokens.splice(i, 3, tokens[i + 1])
       return true
     }
   }

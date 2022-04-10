@@ -57,18 +57,17 @@ A-Za-z char
 [x] expression -> float
 [x] expression -> word
 
-[ ] expression -> expression * expression
-[ ] operator.binary -> expression / expression
-[ ] operator.binary -> expression + expression
-[ ] operator.binary -> expression - expression
+[x] expression -> ( expression )
+[x] expression -> expression * expression
+[x] expression -> expression / expression
+[x] expression -> expression + expression
+[x] expression -> expression - expression
 
 [ ] statement -> word = expression;
 [ ] [statement] -> statement
 [ ] [statement] -> [statement] statement
+[ ] statement -> { [statement] }
 
-[ ] block -> { [statement] }
 [ ] tuple -> expression , expression
 [ ] tuple -> ( tuple )
-[ ] expr -> ( expr )
 ```
- 
