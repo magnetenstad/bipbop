@@ -1,4 +1,4 @@
-
+```
 Person = (
   int age;
   string name;
@@ -24,7 +24,8 @@ sum :: (int a, int b) -> int {
   >> a + b;
 };
 
-sum :: |int a, int b| -> void {
+|int a, int b| -> void
+sum :: {
   >> a + b;
 };
 
@@ -42,6 +43,4 @@ person : growOlder();
 
 
 // person = growOlder(person)
-
-
-
+```

@@ -19,6 +19,6 @@
   },
   "homepage": "https://github.com/magnetenstad/bipbop#readme",
   "dependencies": {
-    "virtual-file-system": "^1.1.5"
+    "virtual-file-system": "^1.1.7"
   }
 }
