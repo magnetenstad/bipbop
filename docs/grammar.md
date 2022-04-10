@@ -71,8 +71,8 @@ Truly parsing
 [x] tuple -> ( tuple )
 [x] parenthesis -> ( tuple )
 
-[ ] function.call -> word parenthesis
-[ ] expression -> function.call
+[x] function.call -> word parenthesis
+[x] expression -> function.call
 
 [ ] array -> [ tuple ]
 [ ] assignment.tuple -> tuple = ---legal?---
