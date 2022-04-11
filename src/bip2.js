@@ -46,8 +46,8 @@ function parseTokens(tokens) {
   while (whitespaceRule(tokens));
   const rulesB = [
     typeWordRule,
+    tupleBaseRule,
     tupleRule,
-    appendTupleRule,
     functionInterfaceRule,
     expressionRule,
     parenthesisExpressionRule,
@@ -56,6 +56,11 @@ function parseTokens(tokens) {
     (tokens) => binaryOperatorExpressionRule(tokens, '+'),
     (tokens) => binaryOperatorExpressionRule(tokens, '-'),
     functionCallRule,
+    functionRule,
+    bracketsStatementRule,
+    statementListRule,
+    statementListBaseRule,
+    statementRule,
     assignmentRule,
     constantAssignmentRule,
   ]
@@ -193,7 +198,7 @@ function wordRule(tokens) {
 
 function booleanRule(tokens) {
   for (let token of tokens) {
-    if (token.type.has('word') && token.value.match(/(true|false)/)) {
+    if (token.type.has('word') && ['true', 'false'].includes(token.value)) {
       token.type.delete('word')
       token.type.add('bool')
       return true
@@ -227,7 +232,7 @@ function whitespaceRule(tokens) {
 function typeRule(tokens) {
   for (let token of tokens) {
     if (token.type.has('word') && !token.type.has('type') &&
-        token.value.match(/(int|float|string|bool)/)) {
+        ['int', 'float', 'string', 'bool'].includes(token.value)) {
       token.type.add('type')
       return true
     }
@@ -274,7 +279,7 @@ function constantAssignmentRule(tokens) {
   return false
 }
 
-function tupleRule(tokens) {
+function tupleBaseRule(tokens) {
   for (let i = 0; i < tokens.length - 2; i++) {
     if (tokens[i].type.has('expression')
         && tokens[i + 1].value === ','
@@ -288,7 +293,7 @@ function tupleRule(tokens) {
   return false
 }
 
-function appendTupleRule(tokens) {
+function tupleRule(tokens) {
   for (let i = 0; i < tokens.length - 2; i++) {
     if (tokens[i].type.has('tuple')
         && tokens[i + 1].value === ','
@@ -355,17 +360,91 @@ function functionCallRule(tokens) {
 
 function functionInterfaceRule(tokens) {
   for (let i = 0; i < tokens.length - 3; i++) {
-    if (tokens[i].type.has('tuple')
-        && tokens[i + 1].value === '-'
-        && tokens[i + 2].value === '>'
-        && (tokens[i + 3].type.has('type')
-          || tokens[i + 3].type.has('tuple'))) {
+    if (tokens[i + 1].value === '-'
+        && tokens[i + 2].value === '>') {
       const token = {
         type: new Set(['function.interface']),
-        value: '->'
+        children: [],
       }
-      token.children = [tokens[i], tokens[i + 3]]
-      tokens.splice(i, 4, token)
+      let start = i + 1
+      let end = i + 3
+      if ((tokens[i].type.has('word')
+          || tokens[i].type.has('tuple'))) {
+        token.children.push(tokens[i])
+        start -= 1
+      }
+      if ((tokens[i + 3].type.has('type')
+          || tokens[i + 3].type.has('tuple'))) {
+        token.children.push(tokens[i + 3])
+        end += 1
+      }
+      tokens.splice(start, end - start, token)
+      return true
+    }
+  }
+  return false
+}
+
+function functionRule(tokens) {
+  for (let i = 0; i < tokens.length - 1; i++) {
+    if (tokens[i].type.has('function.interface')
+        && tokens[i + 1].type.has('statement')) {
+      const token = {
+        type: new Set(['function']),
+      }
+      token.children = [tokens[i], tokens[i + 1]]
+      tokens.splice(i, 2, token)
+      return true
+    }
+  }
+  return false
+}
+
+function bracketsStatementRule(tokens) {
+  for (let i = 0; i < tokens.length - 2; i++) {
+    if (tokens[i].value === '{'
+        && (tokens[i + 1].type.has('statement')
+          || tokens[i + 1].type.has('statement.list'))
+        && tokens[i + 2].value === '}') {
+      tokens[i + 1].type.add('statement')
+      tokens.splice(i, 3, tokens[i + 1])
+      return true
+    }
+  }
+  return false
+}
+
+function statementRule(tokens) {
+  for (let token of tokens) {
+    if (!token.type.has('statement') && token.type.has('function.call')) {
+      token.type.add('statement')
+      return true
+    }
+  }
+  return false
+}
+
+function statementListBaseRule(tokens) {
+  for (let i = 0; i < tokens.length - 1; i++) {
+    if (tokens[i].type.has('statement')
+        && tokens[i + 1].type.has('statement')) {
+      const token = {
+        type: new Set(['statement.list'])
+      }
+      token.children = [tokens[i], tokens[i + 1]]
+      tokens.splice(i, 3, token)
+      return true
+    }
+  }
+  return false
+}
+
+function statementListRule(tokens) {
+  for (let i = 0; i < tokens.length - 1; i++) {
+    if (tokens[i].type.has('statement.list')
+        && tokens[i + 1].type.has('statement')) {
+      tokens[i].children.push(tokens[i + 1])
+      tokens.splice(i + 1, 1)
       return true
     }
   }

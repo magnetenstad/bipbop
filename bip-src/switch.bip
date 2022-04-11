@@ -1,0 +1,31 @@
+
+number = 67
+while true {
+  switch input() {
+    _ > number { output("Guess is too high!") }
+    _ < number { output("Guess is too low!") }
+    : { output("Guess is correct!") break }
+  }
+}
+
+number = 67
+{
+  switch input() {
+    _ > number { output("Guess is too high!") backback }
+    _ < number { output("Guess is too low!") backback }
+    : { output("Guess is correct!") }
+  }
+}
+
+for ()
+
+number = 67
+while true {
+  guess = input()
+  guess > number ? { output("Guess is too high!") }
+  : guess < number ? { output("Guess is too low!") }
+  : {
+    output("Guess is correct!")
+    break
+  }
+}

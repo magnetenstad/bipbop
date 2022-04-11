@@ -1,0 +1,20 @@
+---
+1
+|> sum(1, _)
+|> sum(1, _)
+|> sum(1, _)
+|> >_ _
+
+input()
+|> filter_bad_words(_)
+|> add_emojis(_)
+|> _ + " is what you said"
+|> >_ _
+
+---
+
+
+|> filter_bad_words(_)
+|> add_emojis(_)
+|> _ + " is what you said"
+|> >_ _

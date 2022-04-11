@@ -25,7 +25,7 @@ A-Za-z char
 ### A rules
 Almost just lexing
 ```
-[x] [raw] -> raw
+[x] [raw] -> raw raw
 [x] [raw] -> [raw] raw
 
 [x] symbol.comment -> ---
@@ -82,7 +82,7 @@ Truly parsing
 [x] tuple -> ( tuple )
 [x] parenthesis -> ( tuple )
 
-[ ] [statement] -> statement
+[ ] [statement] -> statement statement
 [ ] [statement] -> [statement] statement
 [ ] statement -> { [statement] }
 
@@ -91,15 +91,12 @@ Truly parsing
 
 [x] function.interface -> tuple -> type
 [x] function.interface -> tuple -> tuple
-[ ] function -> function.interface expression
+[x] function -> function.interface expression
 
 [x] assignment -> word =
 [x] assignment.constant -> word ::
 
-[ ] statement -> expression ;
-[ ] statement -> assignment expression ;
-[ ] statement -> assignment.constant expression ;
-
+[ ] statement -> expression
 ```
 
 ### Spooky
