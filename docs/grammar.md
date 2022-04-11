@@ -66,6 +66,8 @@ Truly parsing
 [x] expression -> bool
 [x] expression -> word
 [x] expression -> tuple
+[x] expression -> function.interface
+[x] expression -> function
 [x] expression -> ( expression )
 [x] parenthesis -> ( expression )
 [x] parenthesis -> ( function.interface )
@@ -97,8 +99,8 @@ Truly parsing
 [x] assignment.constant -> word ::
 
 [x] statement -> function.call
-[ ] statement -> assignment expression
-[ ] statement -> assignment.constant expression
+[x] statement -> assignment expression
+[x] statement -> assignment.constant expression
 ```
 
 ### Spooky

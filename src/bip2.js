@@ -63,6 +63,7 @@ function parseTokens(tokens) {
     statementRule,
     assignmentRule,
     constantAssignmentRule,
+    assignmentStatementRule,
   ]
   for (let i = 0; i < rulesB.length; i++) {
     if (rulesB[i](tokens)) {
@@ -309,7 +310,7 @@ function tupleRule(tokens) {
 function expressionRule(tokens) {
   for (let token of tokens) {
     if (!token.type.has('expression') &&
-        ['string', 'int', 'float', 'bool', 'word', 'function.call', 'tuple', 'function.interface']
+        ['string', 'int', 'float', 'bool', 'word', 'function.call', 'tuple', 'function.interface', 'function']
         .some(e => token.type.has(e))) {
       token.type.add('expression')
       return true
@@ -445,6 +446,21 @@ function statementListRule(tokens) {
         && tokens[i + 1].type.has('statement')) {
       tokens[i].children.push(tokens[i + 1])
       tokens.splice(i + 1, 1)
+      return true
+    }
+  }
+  return false
+}
+
+function assignmentStatementRule(tokens) {
+  for (let i = 0; i < tokens.length - 1; i++) {
+    if ((tokens[i].type.has('assignment') 
+          || tokens[i].type.has('assignment.constant'))
+        && tokens[i + 1].type.has('expression')) {
+      const token = {
+        type: new Set(['statement'])
+      }
+      token.children = tokens.splice(i, 2, token)
       return true
     }
   }
