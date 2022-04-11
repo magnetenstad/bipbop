@@ -1,0 +1,17 @@
+
+hello_world :: -> {
+  >_ "Hello world!"
+}
+
+print :: string text -> {
+  >_ text
+}
+
+sum :: int a, int b -> int {
+  >> a + b
+}
+
+swap :: int a, int b -> int, int {
+  >> b, a
+}
+

@@ -1,8 +1,0 @@
-
-tuple = (int a, int b)
-
-interface = (int a, int b -> int)
-
-function :: (int a, int b -> int) {
-  >> a + b
-}

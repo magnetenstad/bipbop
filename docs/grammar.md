@@ -68,6 +68,7 @@ Truly parsing
 [x] expression -> tuple
 [x] expression -> ( expression )
 [x] parenthesis -> ( expression )
+[x] parenthesis -> ( function.interface )
 
 [x] expression -> expression * expression
 [x] expression -> expression / expression
@@ -88,7 +89,8 @@ Truly parsing
 [x] function.call -> word parenthesis
 [x] expression -> function.call
 
-[ ] function.interface -> parenthesis -> word
+[x] function.interface -> tuple -> type
+[x] function.interface -> tuple -> tuple
 [ ] function -> function.interface expression
 
 [x] assignment -> word =

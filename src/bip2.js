@@ -48,13 +48,13 @@ function parseTokens(tokens) {
     typeWordRule,
     tupleRule,
     appendTupleRule,
+    functionInterfaceRule,
     expressionRule,
     parenthesisExpressionRule,
     (tokens) => binaryOperatorExpressionRule(tokens, '*'),
     (tokens) => binaryOperatorExpressionRule(tokens, '/'),
     (tokens) => binaryOperatorExpressionRule(tokens, '+'),
     (tokens) => binaryOperatorExpressionRule(tokens, '-'),
-    parenthesisTupleRule,
     functionCallRule,
     assignmentRule,
     constantAssignmentRule,
@@ -304,7 +304,7 @@ function appendTupleRule(tokens) {
 function expressionRule(tokens) {
   for (let token of tokens) {
     if (!token.type.has('expression') &&
-        ['string', 'int', 'float', 'bool', 'word', 'function.call', 'tuple']
+        ['string', 'int', 'float', 'bool', 'word', 'function.call', 'tuple', 'function.interface']
         .some(e => token.type.has(e))) {
       token.type.add('expression')
       return true
@@ -340,19 +340,6 @@ function binaryOperatorExpressionRule(tokens, operator) {
   return false
 }
 
-function parenthesisTupleRule(tokens) {
-  for (let i = 0; i < tokens.length - 2; i++) {
-    if (tokens[i].value === '('
-        && tokens[i + 1].type.has('tuple')
-        && tokens[i + 2].value === ')') {
-      tokens[i + 1].type.add('parenthesis')
-      tokens.splice(i, 3, tokens[i + 1])
-      return true
-    }
-  }
-  return false
-}
-
 function functionCallRule(tokens) {
   for (let i = 0; i < tokens.length - 1; i++) {
     if (tokens[i].type.has('word')
@@ -360,6 +347,25 @@ function functionCallRule(tokens) {
       tokens[i].type.add('function.call')
       tokens[i].children = [tokens[i + 1]]
       tokens.splice(i + 1, 1)
+      return true
+    }
+  }
+  return false
+}
+
+function functionInterfaceRule(tokens) {
+  for (let i = 0; i < tokens.length - 3; i++) {
+    if (tokens[i].type.has('tuple')
+        && tokens[i + 1].value === '-'
+        && tokens[i + 2].value === '>'
+        && (tokens[i + 3].type.has('type')
+          || tokens[i + 3].type.has('tuple'))) {
+      const token = {
+        type: new Set(['function.interface']),
+        value: '->'
+      }
+      token.children = [tokens[i], tokens[i + 3]]
+      tokens.splice(i, 4, token)
       return true
     }
   }

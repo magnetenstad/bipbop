@@ -1,23 +1,23 @@
 
 greet :: string name -> {
-  >_ ("Hello " + name + "!");
-};
+  >_ "Hello " + name + "!";
+}
 
 sum :: int a, int b -> int {
-  >> (a + b);
-};
+  >> a + b;
+}
 
-hello_world :: -> { >_ "Hello world!" };
+hello_world :: -> { >_ "Hello world!"; }
 
-print :: string text -> { >_ text };
+print :: string text -> { >_ text; }
 
-half :: float a -> float { >> a / 2 };
+half :: float a -> float { >> a / 2; }
 
 assert :: bool assertion, string message -> {
   (! assertion) ? {
     >_ message;
-  };
-};
+  }
+}
 
 >_ 1;
 
