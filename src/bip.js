@@ -41,7 +41,7 @@ function tokenize(item) {
     token.value = parseFloat(token.name)
   }
   else if (token.name === 'true' || token.name === 'false') {
-    token.type = 'boolean'
+    token.type = 'bool'
     token.value = token.name === 'true'
   } else if (token.name.match(/^[A-Za-z]+$/)) {
     token.type = 'var'

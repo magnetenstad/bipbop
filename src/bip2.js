@@ -3,8 +3,19 @@
 export function runBip(data) {
   const tokens = lex(data)
   const ast = parseTokens(tokens)
+
+  convertToArrays(ast)
   console.log(JSON.stringify(ast, null, 2))
   // interpret(ast)
+}
+
+function convertToArrays(ast) {
+  for (let token of ast) {
+    token.type = new Array(...token.type)
+    if (token.children) {
+      convertToArrays(token.children)
+    }
+  }
 }
 
 function lex(data) {
@@ -20,10 +31,11 @@ function parseTokens(tokens) {
     stringRule,
     characterRule,
     wordRule,
+    booleanRule,
     zeroNineRule,
-    integerRule,
+    intRule,
     floatRule,
-    integerWordRule,
+    intWordRule,
   ]
   for (let i = 0; i < rulesA.length; i++) {
     if (rulesA[i](tokens)) {
@@ -32,18 +44,20 @@ function parseTokens(tokens) {
   }
   while (whitespaceRule(tokens));
   const rulesB = [
-    assignmentRule,
-    constantAssignmentRule,
+    typeRule,
+    typeWordRule,
+    tupleRule,
+    appendTupleRule,
     expressionRule,
     parenthesisExpressionRule,
     (tokens) => binaryOperatorExpressionRule(tokens, '*'),
     (tokens) => binaryOperatorExpressionRule(tokens, '/'),
     (tokens) => binaryOperatorExpressionRule(tokens, '+'),
     (tokens) => binaryOperatorExpressionRule(tokens, '-'),
-    tupleRule,
-    appendTupleRule,
     parenthesisTupleRule,
     functionCallRule,
+    assignmentRule,
+    constantAssignmentRule,
   ]
   for (let i = 0; i < rulesB.length; i++) {
     if (rulesB[i](tokens)) {
@@ -121,17 +135,17 @@ function commentRule(tokens) {
 function zeroNineRule(tokens) {
   for (let token of tokens) {
     if (!token.type.size && token.value.match(/[0-9]/)) {
-      token.type.add('integer')
+      token.type.add('int')
       return true
     }
   }
   return false
 }
 
-function integerRule(tokens) {
+function intRule(tokens) {
   for (let i = 0; i < tokens.length - 1; i++) {
-    if (tokens[i].type.has('integer')
-        && tokens[i + 1].type.has('integer')) {
+    if (tokens[i].type.has('int')
+        && tokens[i + 1].type.has('int')) {
       tokens[i].value += tokens[i + 1].value
       tokens.splice(i + 1, 1)
       return true
@@ -142,9 +156,11 @@ function integerRule(tokens) {
 
 function floatRule(tokens) {
   for (let i = 0; i < tokens.length - 2; i++) {
-    if (tokens[i].type.has('integer')
+    if (tokens[i].type.has('int')
         && tokens[i + 1].value === '.'
-        && tokens[i + 2].type.has('integer')) {
+        && tokens[i + 2].type.has('int')) {
+      tokens[i].type.delete('int')
+      tokens[i].type.add('float')
       tokens[i].value += '.' + tokens[i + 2].value
       tokens.splice(i + 1, 2)
       return true
@@ -175,10 +191,21 @@ function wordRule(tokens) {
   return false
 }
 
-function integerWordRule(tokens) {
+function booleanRule(tokens) {
+  for (let token of tokens) {
+    if (token.type.has('word') && token.value.match(/(true|false)/)) {
+      token.type.delete('word')
+      token.type.add('bool')
+      return true
+    }
+  }
+  return false
+}
+
+function intWordRule(tokens) {
   for (let i = 0; i < tokens.length - 2; i++) {
     if (tokens[i].type.has('word')
-        && tokens[i + 1].type.has('integer')) {
+        && tokens[i + 1].type.has('int')) {
       tokens[i].value += tokens[i + 1].value
       tokens.splice(i + 1, 1)
       return true
@@ -197,12 +224,37 @@ function whitespaceRule(tokens) {
   return false
 }
 
-function assignmentRule(tokens) {
+function typeRule(tokens) {
+  for (let token of tokens) {
+    if (token.type.has('word') && !token.type.has('type') &&
+        token.value.match(/(int|float|string|bool)/)) {
+      token.type.add('type')
+      return true
+    }
+  }
+  return false
+}
+
+function typeWordRule(tokens) {
   for (let i = 0; i < tokens.length - 1; i++) {
+    if (tokens[i].type.has('type')
+        && tokens[i + 1].type.has('word')) {
+      tokens[i + 1].type.add(tokens[i].value)
+      tokens.splice(i, 1)
+      return true
+    }
+  }
+  return false
+}
+
+function assignmentRule(tokens) {
+  for (let i = 0; i < tokens.length - 2; i++) {
     if (tokens[i].type.has('word')
-        && tokens[i + 1].value === '=') {
-      tokens[i].type.add('assignment')
-      tokens.splice(i + 1, 1)
+        && tokens[i + 1].value === '='
+        && tokens[i + 2].type.has('expression')) {
+      tokens[i + 1].type.add('assignment')
+      tokens[i + 1].children = [tokens[i], tokens[i + 2]]
+      tokens.splice(i, 3, tokens[i + 1])
       return true
     }
   }
@@ -222,10 +274,37 @@ function constantAssignmentRule(tokens) {
   return false
 }
 
+function tupleRule(tokens) {
+  for (let i = 0; i < tokens.length - 2; i++) {
+    if (tokens[i].type.has('expression')
+        && tokens[i + 1].value === ','
+        && tokens[i + 2].type.has('expression')) {
+      tokens[i + 1].type.add('tuple')
+      tokens[i + 1].children = [tokens[i], tokens[i + 2]]
+      tokens.splice(i, 3, tokens[i + 1])
+      return true
+    }
+  }
+  return false
+}
+
+function appendTupleRule(tokens) {
+  for (let i = 0; i < tokens.length - 2; i++) {
+    if (tokens[i].type.has('tuple')
+        && tokens[i + 1].value === ','
+        && tokens[i + 2].type.has('expression')) {
+      tokens[i].children.push(tokens[i + 2])
+      tokens.splice(i + 1, 2)
+      return true
+    }
+  }
+  return false
+}
+
 function expressionRule(tokens) {
   for (let token of tokens) {
     if (!token.type.has('expression') &&
-        ['string', 'integer', 'float', 'word', 'function.call']
+        ['string', 'int', 'float', 'bool', 'word', 'function.call', 'tuple']
         .some(e => token.type.has(e))) {
       token.type.add('expression')
       return true
@@ -255,33 +334,6 @@ function binaryOperatorExpressionRule(tokens, operator) {
       tokens[i + 1].type.add('expression')
       tokens[i + 1].children = [tokens[i], tokens[i + 2]]
       tokens.splice(i, 3, tokens[i + 1])
-      return true
-    }
-  }
-  return false
-}
-
-function tupleRule(tokens) {
-  for (let i = 0; i < tokens.length - 2; i++) {
-    if (tokens[i].type.has('expression')
-        && tokens[i + 1].value === ','
-        && tokens[i + 2].type.has('expression')) {
-      tokens[i + 1].type.add('tuple')
-      tokens[i + 1].children = [tokens[i], tokens[i + 2]]
-      tokens.splice(i, 3, tokens[i + 1])
-      return true
-    }
-  }
-  return false
-}
-
-function appendTupleRule(tokens) {
-  for (let i = 0; i < tokens.length - 2; i++) {
-    if (tokens[i].type.has('tuple')
-        && tokens[i + 1].value === ','
-        && tokens[i + 2].type.has('expression')) {
-      tokens[i].children.push(tokens[i + 2])
-      tokens.splice(i + 1, 2)
       return true
     }
   }

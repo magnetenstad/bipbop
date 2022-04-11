@@ -34,10 +34,17 @@ Almost just lexing
 
 [x] word -> A-Za-z
 [x] word -> word word
-[x] integer -> 0-9
-[x] integer -> integer integer
-[x] float -> integer.integer
-[x] word -> word integer
+[x] int -> 0-9
+[x] int -> int int
+[x] float -> int.int
+[x] bool -> true
+[x] bool -> false
+[ ] type -> int
+[ ] type -> float
+[ ] type -> string
+[ ] type -> bool
+[x] word -> word int
+[ ] word.typed -> type word
 ```
 
 ### White space
@@ -52,12 +59,13 @@ Almost just lexing
 ### B rules
 Truly parsing
 ```
-[x] assignment -> word =
-[x] assignment.constant -> word ::
+
 [x] expression -> string
-[x] expression -> integer
+[x] expression -> int
 [x] expression -> float
+[x] expression -> bool
 [x] expression -> word
+[x] expression -> tuple
 [x] expression -> ( expression )
 [x] parenthesis -> ( expression )
 
@@ -65,24 +73,36 @@ Truly parsing
 [x] expression -> expression / expression
 [x] expression -> expression + expression
 [x] expression -> expression - expression
+[ ] expression -> expression && expression
+[ ] expression -> expression || expression
 
 [x] tuple -> expression , expression
 [x] tuple -> tuple , expression
 [x] tuple -> ( tuple )
 [x] parenthesis -> ( tuple )
 
-[x] function.call -> word parenthesis
-[x] expression -> function.call
-
-[ ] array -> [ tuple ]
-[ ] assignment.tuple -> tuple = ---legal?---
-[ ] assignment.tuple.constant -> tuple :: ---legal?---
-
-[ ] statement -> assignment expression ;
-[ ] statement -> assignment.constant expression ;
-
 [ ] [statement] -> statement
 [ ] [statement] -> [statement] statement
 [ ] statement -> { [statement] }
 
+[x] function.call -> word parenthesis
+[x] expression -> function.call
+
+[ ] function.interface -> parenthesis -> word
+[ ] function -> function.interface expression
+
+[x] assignment -> word =
+[x] assignment.constant -> word ::
+
+[ ] statement -> expression ;
+[ ] statement -> assignment expression ;
+[ ] statement -> assignment.constant expression ;
+
+```
+
+### Spooky
+```
+[ ] array -> [ tuple ]
+[ ] assignment.tuple -> tuple = 
+[ ] assignment.tuple.constant -> tuple :: 
 ```
