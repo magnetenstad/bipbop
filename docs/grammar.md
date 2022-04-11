@@ -39,12 +39,11 @@ Almost just lexing
 [x] float -> int.int
 [x] bool -> true
 [x] bool -> false
-[ ] type -> int
-[ ] type -> float
-[ ] type -> string
-[ ] type -> bool
+[x] type -> int
+[x] type -> float
+[x] type -> string
+[x] type -> bool
 [x] word -> word int
-[ ] word.typed -> type word
 ```
 
 ### White space
@@ -59,6 +58,7 @@ Almost just lexing
 ### B rules
 Truly parsing
 ```
+[x] word.typed -> type word
 
 [x] expression -> string
 [x] expression -> int

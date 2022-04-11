@@ -36,6 +36,7 @@ function parseTokens(tokens) {
     intRule,
     floatRule,
     intWordRule,
+    typeRule,
   ]
   for (let i = 0; i < rulesA.length; i++) {
     if (rulesA[i](tokens)) {
@@ -44,7 +45,6 @@ function parseTokens(tokens) {
   }
   while (whitespaceRule(tokens));
   const rulesB = [
-    typeRule,
     typeWordRule,
     tupleRule,
     appendTupleRule,
