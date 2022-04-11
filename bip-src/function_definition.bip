@@ -1,3 +1,4 @@
+--- works ---
 
 helloWorld :: -> {
   output("Hello world!")

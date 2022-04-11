@@ -5,6 +5,8 @@
 |> sum(1, _)
 |> >_ _
 
+--- WIP ---
+
 input()
 |> filter_bad_words(_)
 |> add_emojis(_)
