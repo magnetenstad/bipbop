@@ -82,9 +82,9 @@ Truly parsing
 [x] tuple -> ( tuple )
 [x] parenthesis -> ( tuple )
 
-[ ] [statement] -> statement statement
-[ ] [statement] -> [statement] statement
-[ ] statement -> { [statement] }
+[x] [statement] -> statement statement
+[x] [statement] -> [statement] statement
+[x] statement -> { [statement] }
 
 [x] function.call -> word parenthesis
 [x] expression -> function.call
@@ -96,7 +96,9 @@ Truly parsing
 [x] assignment -> word =
 [x] assignment.constant -> word ::
 
-[ ] statement -> expression
+[x] statement -> function.call
+[ ] statement -> assignment expression
+[ ] statement -> assignment.constant expression
 ```
 
 ### Spooky
