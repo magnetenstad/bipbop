@@ -1,8 +1,9 @@
 --- works ---
 
-helloWorld :: -> {
-  output("Hello world!")
-}
+helloWorld :: -> output("Hello world!")
+helloWorld()
+
+half :: int x -> float return(x / 2)
 
 print :: string text -> {
   output(text)
@@ -14,5 +15,28 @@ sum :: int a, int b -> int {
 
 swap :: int a, int b -> int, int {
   return(b, a)
+}
+
+--- WIP ---
+
+--- polymorphism? or just type aliases ---
+
+type number :: int | float
+type string :: array<char>
+
+okBuddy ::
+    str first  = "Ok",
+    str second = "Buddy",
+    str third  = "Cool"
+    -> str {
+  return(first + second + third)
+}
+
+okBuddy(third = "Dumb")
+
+dynamicArguments :: int args.. -> {
+  for arg in args {
+    print(arg)
+  }
 }
 
