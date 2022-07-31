@@ -37,7 +37,7 @@ while ((i ?= -1) += 1) < 10 {
 
 1, 2, .., 10
 
-0..2..list.length - 1
+0 .. 2 ..< list.length
 
 
 i |<  {
@@ -94,3 +94,9 @@ for(0..10, (int i) -> {
   print(i)
 })
 
+--- with/use ---
+
+for a; b; (x, i) in [1, 2, 3]; y in [1, 2, 3];
+{
+  
+}

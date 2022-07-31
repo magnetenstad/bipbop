@@ -3,6 +3,7 @@
 Might become a programming language
 
 # Notation
+
 no keywords, only symbols.
 
 ## Variables
@@ -18,6 +19,8 @@ z = "Hello world" --- Type inferred ---
 ```cpp
 (y == 5) ? {
   output("y is five!")
+} : {
+  output("y is not five!")
 }
 ```
 
