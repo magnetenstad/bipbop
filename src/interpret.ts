@@ -8,29 +8,26 @@ function interpret(
   vars = vars === null ? new Map() : scope ? new Map(vars) : vars
 
   if (node.children && node.children.length) {
-    if (node.children[0].name == '//') {
+    if (node.children[0].key == '//') {
       return
     }
 
     for (let i = 0; i < node.children.length; i++) {
       const child = node.children[i]
-      const value = vars.get(child.name)
+      const value = vars.get(child.key)
 
       if (value === undefined) {
         const scope = child.hasType(TokenType.StatementList)
         interpret(child, vars, scope)
       } else {
-        child.value = vars.get(child.name).value
+        child.value = vars.get(child.key).value
       }
     }
   }
 
   if (
-    node.hasAnyOfTypes([
-      TokenType.StatementList,
-      TokenType.Statement,
-      TokenType.Expression,
-    ])
+    node.hasAnyOfTypes([TokenType.StatementList, TokenType.Statement]) ||
+    node.isExpression()
   ) {
     if (node.children.length) {
       node.value = node.children[node.children.length - 1].value
@@ -38,7 +35,7 @@ function interpret(
   }
 
   if (node.hasType(TokenType.FunctionCall)) {
-    const func = vars.get(node.children[0].name)
+    const func = vars.get(node.children[0].key)
     const args = node.children[1]
     if (func.type !== 'function') console.warn('Expected a function')
     interpret(args, vars)
@@ -48,17 +45,17 @@ function interpret(
 
   if (node.hasType(TokenType.Statement)) {
     if (node.children.length > 1) {
-      if (node.children[1].name === '=' || node.children[1].name === '::') {
-        vars.set(node.children[0].name, node.children[2])
+      if (node.children[1].key === '=' || node.children[1].key === '::') {
+        vars.set(node.children[0].key, node.children[2])
         return
       }
     }
     if (node.children.length > 0) {
       const first = node.children[0]
-      if (first.name === '>_') {
+      if (first.key === '>_') {
         console.log(node.children.length > 1 ? node.children[1].value : '')
       }
-      if (node.children[0].name === '>>') {
+      if (node.children[0].key === '>>') {
         return {
           message: 'return',
           value: node.children.length > 1 ? node.children[1] : null,
@@ -74,25 +71,25 @@ function interpret(
   }
 
   if (node.hasType(TokenType.Operation)) {
-    if (node.name === '+') {
+    if (node.key === '+') {
       node.value = node.children[0].value + node.children[1].value
     }
-    if (node.name === '-') {
+    if (node.key === '-') {
       node.value = node.children[0].value - node.children[1].value
     }
-    if (node.name === '*') {
+    if (node.key === '*') {
       node.value = node.children[0].value * node.children[1].value
     }
-    if (node.name === '/') {
+    if (node.key === '/') {
       node.value = node.children[0].value / node.children[1].value
     }
-    if (node.name === '==') {
+    if (node.key === '==') {
       node.value = node.children[0].value == node.children[1].value
     }
-    if (node.name === '!=') {
+    if (node.key === '!=') {
       node.value = node.children[0].value != node.children[1].value
     }
-    if (node.name === '!') {
+    if (node.key === '!') {
       node.value = !node.children[0].value
     }
   }
@@ -113,11 +110,11 @@ function executeFunction(
     const value =
       i >= args.length
         ? { type: 'null', value: null }
-        : vars.get(args[i].name)
-        ? vars.get(args[i].name)
+        : vars.get(args[i].key)
+        ? vars.get(args[i].key)
         : args[i]
 
-    vars.set(func.from.children[i].name, value)
+    vars.set(func.from.children[i].key, value)
   }
 
   for (let node of func.to.children) {
