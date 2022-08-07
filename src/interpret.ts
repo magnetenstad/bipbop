@@ -1,7 +1,7 @@
-import { InterpretedToken, TokenType } from './util.js'
+import { Token, TokenType } from './token.js'
 
 function interpret(
-  node: InterpretedToken,
+  node: Token,
   vars: Map<string, any> | null = null,
   scope = false
 ) {
@@ -99,8 +99,8 @@ function interpret(
 }
 
 function executeFunction(
-  func: { from: InterpretedToken; to: InterpretedToken; value: any },
-  args: InterpretedToken[],
+  func: { from: Token; to: Token; value: any },
+  args: Token[],
   vars: Map<string, any> | null = null
 ) {
   if (vars === null) {

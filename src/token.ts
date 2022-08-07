@@ -1,7 +1,7 @@
 export class Token {
-  private type: Set<TokenType> = new Set()
+  private type: TokenTypeSet = new TokenTypeSet()
   name: string
-  value: string
+  value: any
   valueType: ValueType = ValueType.None
   children: Token[] = []
 
@@ -25,9 +25,10 @@ export class Token {
   }
 }
 
-export class InterpretedToken extends Token {
-  value: any
-  children: InterpretedToken[] = []
+class TokenTypeSet extends Set<TokenType> {
+  get [Symbol.toStringTag]() {
+    return JSON.stringify([...this.values()].map((value) => TokenType[value]))
+  }
 }
 
 export enum TokenType {
