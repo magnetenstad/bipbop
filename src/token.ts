@@ -4,11 +4,7 @@ export class Token {
   value: any
   children: Token[]
 
-  constructor(
-    type: TokenType,
-    key: string = 'untitled',
-    children: Token[] = []
-  ) {
+  constructor(type: TokenType, key: string = '', children: Token[] = []) {
     this.setType(type)
     this.key = key
     this.children = children
@@ -54,8 +50,21 @@ export class Token {
         TokenType.Tuple,
         TokenType.FunctionInterface,
         TokenType.Function,
+        TokenType.BinaryOperation,
+        TokenType.Parenthesis,
+        TokenType.TypedWord,
+        TokenType.FunctionInterface,
       ])
     )
+  }
+
+  isBinaryOperator() {
+    return this.hasAnyOfTypes([
+      TokenType.sPlus,
+      TokenType.sMinus,
+      TokenType.sTimes,
+      TokenType.sSlash,
+    ])
   }
 }
 
@@ -79,6 +88,8 @@ export enum TokenType {
   sTimes,
   sSlash,
   sBackslash,
+  sEscaped,
+  sString,
 
   // Keywords
   kChar,
@@ -95,6 +106,7 @@ export enum TokenType {
   vBool,
 
   // Other
+  WhiteSpace,
   Word,
   Type,
   Comment,
@@ -107,8 +119,8 @@ export enum TokenType {
   Statement,
   StatementList,
   Parenthesis,
-  Operator,
-  Operation,
+  BinaryOperation,
   Conditional,
   TypedWord,
+  Sequence,
 }

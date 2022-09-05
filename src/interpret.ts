@@ -70,7 +70,7 @@ function interpret(
     }
   }
 
-  if (node.hasType(TokenType.Operation)) {
+  if (node.hasType(TokenType.BinaryOperation)) {
     if (node.key === '+') {
       node.value = node.children[0].value + node.children[1].value
     }

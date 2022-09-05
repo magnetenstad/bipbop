@@ -1,4 +1,3 @@
-
 # Bipbop Grammar
 
 A context-free grammar can be described by a four-element tuple $(V, \Sigma, R, S)$ where
@@ -9,8 +8,6 @@ A context-free grammar can be described by a four-element tuple $(V, \Sigma, R, 
 - $S$ (which is in $V$) which is a start symbol.
 
 [Source](https://en.wikipedia.org/wiki/Context-free_grammar)
-
-## 
 
 ## Terminal symbols, $\Sigma$
 
@@ -23,7 +20,9 @@ A-Za-z char
 ## Production rules, $R$
 
 ### A rules
+
 Almost just lexing
+
 ```
 [x] [raw] -> raw raw
 [x] [raw] -> [raw] raw
@@ -47,8 +46,9 @@ Almost just lexing
 ```
 
 ### White space
+
 ```
-[x] ws ->  
+[x] ws ->
 [x] ws -> \r
 [x] ws -> \n
 [x] ws -> ws ws
@@ -56,7 +56,9 @@ Almost just lexing
 ```
 
 ### B rules
+
 Truly parsing
+
 ```
 [x] word.typed -> type word
 
@@ -104,8 +106,9 @@ Truly parsing
 ```
 
 ### Spooky
+
 ```
 [ ] array -> [ tuple ]
-[ ] assignment.tuple -> tuple = 
-[ ] assignment.tuple.constant -> tuple :: 
+[ ] assignment.tuple -> tuple =
+[ ] assignment.tuple.constant -> tuple ::
 ```

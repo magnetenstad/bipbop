@@ -4,9 +4,8 @@ import {
   noWhiteSpaceRules,
   symbolRules,
   applyRules,
-  commentRule,
-  stringRule,
-  whitespaceRule,
+  stringAndCommentRules,
+  whiteSpaceRules,
   wordRules,
   numberRules,
 } from './rules.js'
@@ -32,9 +31,10 @@ function parseTokens(tokens: Token[]) {
   applyRules(symbolRules, tokens)
   applyRules(numberRules, tokens)
   applyRules(wordRules, tokens)
-  commentRule(tokens)
-  stringRule(tokens)
-  while (whitespaceRule(tokens)) {}
+  applyRules(stringAndCommentRules, tokens)
+  tokens = tokens.filter((t) => !t.hasType(TokenType.Comment))
+  applyRules(whiteSpaceRules, tokens)
+  tokens = tokens.filter((t) => !t.hasType(TokenType.WhiteSpace))
   applyRules(noWhiteSpaceRules, tokens)
   return tokens
 }
