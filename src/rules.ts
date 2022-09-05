@@ -1,4 +1,4 @@
-import { Token, TokenType } from './token.js'
+import { Token, TokenType } from './token'
 
 // Helper functions
 
@@ -164,6 +164,7 @@ export const betweenRule = function (
 }
 
 export const stringAndCommentRules = {
+  // arguments[0] is a hack (denoting a request for the whole tokens array)
   string() {
     return betweenRule(arguments[0], TokenType.vString, (a: Token) =>
       a.hasType(TokenType.sString)

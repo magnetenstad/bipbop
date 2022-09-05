@@ -1,4 +1,4 @@
-import { Token, TokenType } from './token.js'
+import { Token, TokenType } from './token'
 
 function interpret(
   node: Token,

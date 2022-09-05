@@ -1,5 +1,5 @@
 import util from 'util'
-import { Token, TokenType } from './token.js'
+import { Token, TokenType } from './token'
 import {
   noWhiteSpaceRules,
   symbolRules,
@@ -16,6 +16,10 @@ export function runBip(data: string) {
   console.log('Start parse...')
   const ast = parseTokens(tokens)
   console.log('Log results..')
+  return ast
+}
+
+export function printAst(ast: Token[]) {
   console.log(
     util.inspect(ast, { showHidden: false, depth: null, colors: true })
   )

@@ -1,7 +1,7 @@
 --- works ---
 
-true
-false
+a = true
+b = false
 
-TRUE
-FALSE
+c = TRUE
+d = FALSE

@@ -10,6 +10,10 @@ export class Token {
     this.children = children
   }
 
+  getType() {
+    return [...this.type][0]
+  }
+
   hasType(type: TokenType) {
     return this.type.has(type)
   }

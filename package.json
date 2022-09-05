@@ -2,10 +2,11 @@
   "name": "bipbop",
   "version": "1.0.0",
   "description": "Might become a programming language",
-  "main": "src/index.js",
-  "type": "module",
+  "main": "lib/index.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "tsc && node src/main.js"
+    "start": "tsc && node lib/main.js",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -18,10 +19,10 @@
     "url": "https://github.com/magnetenstad/bipbop/issues"
   },
   "homepage": "https://github.com/magnetenstad/bipbop#readme",
-  "dependencies": {
-    "virtual-file-system": "^1.1.6"
-  },
   "devDependencies": {
     "@types/node": "^18.6.3"
+  },
+  "dependencies": {
+    "virtual-file-system": "^1.2.8"
   }
 }
