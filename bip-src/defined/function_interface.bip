@@ -1,0 +1,5 @@
+--- works ---
+
+tuple = int a, int b
+interface = (int a, int b -> int, int)
+interface2 = (int a, int b -> int)

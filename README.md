@@ -3,42 +3,64 @@
 Might become a programming language
 
 # Notation
+
 no keywords, only symbols.
 
 ## Variables
 
 ```cpp
-x = 0;
-y = 'Hello world';
+int x = 0
+bool y :: true --- Constant assignment ---
+z = "Hello world" --- Type inferred ---
 ```
 
-## Conditions
+## Conditions WIP
 
 ```cpp
 (y == 5) ? {
-  >_ 'y is five!';
-};
+  output("y is five!")
+} : {
+  output("y is not five!")
+}
 ```
 
 ## Functions
 
 ```cpp
-greet :: (name) -> {
-  >_ ('Hello ' + name + '!');
-};
+greet :: string name -> {
+  output("Hello " + name + "!")
+}
 
-sum :: (a, b) -> {
-  >> (a + b);
-};
+sum :: int a, int b -> int {
+  return(a + b)
+}
 
-assert :: (assertion, message) -> {
-  (! assertion) ? {
-    >_ message;
-  };
-};
+assert :: bool assertion, string message -> {
+  !assertion ? {
+    output(message)
+  }
+}
 
-assert((y == 5), 'y should be five');
-assert((y != 5), 'never mind');
+assert(y == 5, "y should be five")
+assert(y != 5, "never mind")
+
+handleData :: func<<int>, <void>> callback -> {
+  int data = getData()
+  callback(data)
+}
+
+--- func<<int>, <void>> or int -> void ---
+
+handleData(int data -> { output(data) })
+```
+
+## Structs WIP
+
+```cpp
+struct person {
+  int age
+  string name
+}
 ```
 
 ## Notes
@@ -50,7 +72,7 @@ assert((y != 5), 'never mind');
 + addition
 \
 ¨
-' strings
+" strings
 ,
 .
 - subtraction
@@ -69,7 +91,7 @@ assert((y != 5), 'never mind');
 `
 ^
 *
-; delimiter
+ delimiter
 :
 _ matcher
 @
@@ -82,12 +104,4 @@ $
 } block
 ´
 ~
-```
-
-#### Combinations
-
-```
->_ print
-<_ input
-
 ```

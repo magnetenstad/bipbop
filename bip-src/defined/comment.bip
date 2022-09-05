@@ -1,0 +1,18 @@
+--- works ---
+
+--- This is an inline comment ---
+
+---
+This is a 
+block comment
+---
+
+--- Header
+paragraph
+paragraph
+---
+
+--- Header --- ---
+paragraph
+paragraph
+---

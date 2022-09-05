@@ -1,0 +1,31 @@
+
+sum(a, b) = a + b
+
+void assert(str assertion, str message) {
+  assertion ? {
+    print(message)
+  }
+}
+
+assert :: bool assertion, string message -> {
+  !assertion ? {
+    >_ message;
+  }
+}
+
+1.print()
+
+shuffled = name
+  .upper()
+  .split()
+  .shuffle()
+  .join()
+
+shuffled = name 
+|> upper
+|> split
+|> shuffle
+|> join
+
+--> shuffled = join(shuffle(split(upper(name))))
+

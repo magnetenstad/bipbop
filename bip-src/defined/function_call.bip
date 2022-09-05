@@ -1,0 +1,5 @@
+--- works ---
+
+a = random()
+b = f(x)
+c = sum(1, 2, 3)

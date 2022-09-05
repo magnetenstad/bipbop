@@ -1,0 +1,6 @@
+--- WIP ---
+
+struct person {
+  int age
+  string name
+}

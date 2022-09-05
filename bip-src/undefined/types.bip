@@ -1,0 +1,13 @@
+--- works ---
+
+float a = 1.0
+
+int b = 4
+
+string c = "Heya!"
+
+--- WIP ---
+
+type number :: int | float
+
+int? b = null
