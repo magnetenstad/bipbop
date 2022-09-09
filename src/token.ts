@@ -1,5 +1,5 @@
 export class Token {
-  private type: TokenTypeSet = new TokenTypeSet()
+  private type: TokenType = TokenType.None
   key: string
   value: any
   children: Token[]
@@ -10,25 +10,28 @@ export class Token {
     this.children = children
   }
 
+  get [Symbol.toStringTag]() {
+    return TokenType[this.getType()]
+  }
+
   getType() {
-    return [...this.type][0]
+    return this.type
   }
 
-  hasType(type: TokenType) {
-    return this.type.has(type)
+  isOfType(type: TokenType) {
+    return this.type === type
   }
 
-  hasAnyOfTypes(types: TokenType[]) {
-    return types.some((type) => this.type.has(type))
+  isAnyOfTypes(types: TokenType[]) {
+    return types.some((type) => this.isOfType(type))
   }
 
   setType(type: TokenType) {
-    this.type.delete(TokenType.None)
-    this.type.add(type)
+    this.type = type
   }
 
   isValue() {
-    return this.hasAnyOfTypes([
+    return this.isAnyOfTypes([
       TokenType.vString,
       TokenType.vInt,
       TokenType.vFloat,
@@ -37,7 +40,7 @@ export class Token {
   }
 
   isTypeKeyword() {
-    return this.hasAnyOfTypes([
+    return this.isAnyOfTypes([
       TokenType.kString,
       TokenType.kInt,
       TokenType.kFloat,
@@ -48,7 +51,7 @@ export class Token {
   isExpression() {
     return (
       this.isValue() ||
-      this.hasAnyOfTypes([
+      this.isAnyOfTypes([
         TokenType.Word,
         TokenType.FunctionCall,
         TokenType.Tuple,
@@ -58,23 +61,19 @@ export class Token {
         TokenType.Parenthesis,
         TokenType.TypedWord,
         TokenType.FunctionInterface,
+        TokenType.Array,
+        TokenType.PipeExpression,
       ])
     )
   }
 
   isBinaryOperator() {
-    return this.hasAnyOfTypes([
+    return this.isAnyOfTypes([
       TokenType.sPlus,
       TokenType.sMinus,
       TokenType.sTimes,
       TokenType.sSlash,
     ])
-  }
-}
-
-class TokenTypeSet extends Set<TokenType> {
-  get [Symbol.toStringTag]() {
-    return JSON.stringify([...this.values()].map((value) => TokenType[value]))
   }
 }
 
@@ -94,6 +93,7 @@ export enum TokenType {
   sBackslash,
   sEscaped,
   sString,
+  sPipe,
 
   // Keywords
   kChar,
@@ -117,6 +117,7 @@ export enum TokenType {
   Assignment,
   ConstantAssignment,
   Tuple,
+  Array,
   FunctionCall,
   FunctionInterface,
   Function,
@@ -127,4 +128,6 @@ export enum TokenType {
   Conditional,
   TypedWord,
   Sequence,
+  Block,
+  PipeExpression,
 }

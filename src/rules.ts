@@ -12,14 +12,19 @@ export const applyRules = (rulesObject: object, tokens: Token[]) => {
 }
 
 const applyRule = (tokens: Token[], rule: any): boolean => {
-  const argCount = rule.length
+  const argCount = rule.length // number of arguments of the rule function
+
+  if (argCount === 0) {
+    // indicates use of *all* tokens
+    // the rule should handle insertion and splicing
+    const token = rule(tokens)
+    return !!token
+  }
+
   for (let i = 0; i < tokens.length - (argCount - 1); i++) {
     const argTokens = []
     for (let j = 0; j < argCount; j++) {
       argTokens.push(tokens[i + j])
-    }
-    if (argCount === 0) {
-      argTokens.push(tokens)
     }
     const token = rule(...argTokens)
     if (token) {
@@ -27,6 +32,7 @@ const applyRule = (tokens: Token[], rule: any): boolean => {
       return true
     }
   }
+
   return false
 }
 
@@ -39,7 +45,7 @@ const symbolRule = (type: TokenType, keys: string, tokens: Token[]) => {
       return
     }
   }
-  if (len === 1 && tokens[0].hasType(type)) return
+  if (len === 1 && tokens[0].isOfType(type)) return
   return new Token(type, tokens.map((t) => t.key).join(''))
 }
 
@@ -64,6 +70,7 @@ export const symbolRules = {
   sMinus: singleSymbolRule(TokenType.sMinus, '-'),
   sEscaped: doubleSymbolRule(TokenType.sEscaped, '\\'),
   sString: singleSymbolRule(TokenType.sString, '"'),
+  sPipe: doubleSymbolRule(TokenType.sPipe, '|>'),
 }
 
 // Number rules
@@ -71,22 +78,22 @@ export const symbolRules = {
 export const numberRules = {
   // Int -> 0-9
   zeroNine(a: Token) {
-    if (a.hasType(TokenType.None) && a.key.match(/[0-9]/)) {
+    if (a.isOfType(TokenType.None) && a.key.match(/[0-9]/)) {
       return new Token(TokenType.vInt, a.key)
     }
   },
   // Int -> Int Int
   int(a: Token, b: Token) {
-    if (a.hasType(TokenType.vInt) && b.hasType(TokenType.vInt)) {
+    if (a.isOfType(TokenType.vInt) && b.isOfType(TokenType.vInt)) {
       return new Token(TokenType.vInt, a.key + b.key)
     }
   },
   // Float -> Int.Int
   float(a: Token, b: Token, c: Token) {
     if (
-      a.hasType(TokenType.vInt) &&
+      a.isOfType(TokenType.vInt) &&
       b.key === '.' &&
-      c.hasType(TokenType.vInt)
+      c.isOfType(TokenType.vInt)
     ) {
       return new Token(TokenType.vFloat, a.key + '.' + c.key)
     }
@@ -96,7 +103,7 @@ export const numberRules = {
 // WordRules
 
 const keywordRule = (type: TokenType, keyWord: string) => (a: Token) => {
-  if (a.hasType(TokenType.Word) && a.key === keyWord) {
+  if (a.isOfType(TokenType.Word) && a.key === keyWord) {
     return new Token(type, a.key)
   }
 }
@@ -104,13 +111,13 @@ const keywordRule = (type: TokenType, keyWord: string) => (a: Token) => {
 export const wordRules = {
   // Word -> A-Za-z
   aToZ(a: Token) {
-    if (a.hasType(TokenType.None) && a.key.match(/[A-Za-z]/)) {
+    if (a.isOfType(TokenType.None) && a.key.match(/[A-Za-z]/)) {
       return new Token(TokenType.Word, a.key)
     }
   },
   // Word -> WordWord
   word(a: Token, b: Token) {
-    if (a.hasType(TokenType.Word) && b.hasType(TokenType.Word)) {
+    if (a.isOfType(TokenType.Word) && b.isOfType(TokenType.Word)) {
       return new Token(TokenType.Word, a.key + b.key)
     }
   },
@@ -122,7 +129,7 @@ export const wordRules = {
   vBoolFalse: keywordRule(TokenType.vBool, 'false'),
   // Word -> WordInt
   wordInt(a: Token, b: Token) {
-    if (a.hasType(TokenType.Word) && b.hasType(TokenType.vInt)) {
+    if (a.isOfType(TokenType.Word) && b.isOfType(TokenType.vInt)) {
       return new Token(TokenType.Word, a.key + b.key)
     }
   },
@@ -154,7 +161,7 @@ export const betweenRule = function (
       let end = i
       const token = new Token(type)
       token.key = tokens
-        .splice(start, end - start + 1)
+        .splice(start, end - start + 1, token)
         .slice(1, end - start)
         .map((t) => t.key)
         .join('')
@@ -167,12 +174,12 @@ export const stringAndCommentRules = {
   // arguments[0] is a hack (denoting a request for the whole tokens array)
   string() {
     return betweenRule(arguments[0], TokenType.vString, (a: Token) =>
-      a.hasType(TokenType.sString)
+      a.isOfType(TokenType.sString)
     )
   },
   comment() {
     return betweenRule(arguments[0], TokenType.Comment, (a: Token) =>
-      a.hasType(TokenType.sComment)
+      a.isOfType(TokenType.sComment)
     )
   },
 }
@@ -180,9 +187,21 @@ export const stringAndCommentRules = {
 // Rules that apply after white space has been removed
 
 export const noWhiteSpaceRules = {
-  emptyTuple(a: Token, b: Token) {
+  functionRule(a: Token, b: Token) {
+    if (
+      a.isOfType(TokenType.FunctionInterface) &&
+      b.isAnyOfTypes([
+        TokenType.Statement,
+        TokenType.StatementList,
+        TokenType.Block,
+      ])
+    ) {
+      return new Token(TokenType.Function, '', [a, b])
+    }
+  },
+  emptyParenthesis(a: Token, b: Token) {
     if (a.key === '(' && b.key === ')') {
-      return new Token(TokenType.Tuple)
+      return new Token(TokenType.Parenthesis)
     }
   },
   binaryOperatorExpressionRule(a: Token, b: Token, c: Token) {
@@ -191,12 +210,12 @@ export const noWhiteSpaceRules = {
     }
   },
   valueTypeRule(a: Token, b: Token) {
-    if (a.isTypeKeyword() && b.hasType(TokenType.Word)) {
-      return new Token(TokenType.TypedWord, a.key, [a, b])
+    if (a.isTypeKeyword() && b.isOfType(TokenType.Word)) {
+      return new Token(TokenType.TypedWord, b.key, [a, b])
     }
   },
   functionCallRule(a: Token, b: Token) {
-    if (a.hasType(TokenType.Word) && b.hasType(TokenType.Tuple)) {
+    if (a.isOfType(TokenType.Word) && b.isOfType(TokenType.Parenthesis)) {
       return new Token(TokenType.FunctionCall, '', [a, b])
     }
   },
@@ -206,84 +225,132 @@ export const noWhiteSpaceRules = {
     }
   },
   extendSequenceRule(a: Token, b: Token, c: Token) {
-    if (a.hasType(TokenType.Sequence) && b.key === ',' && c.isExpression()) {
+    if (a.isOfType(TokenType.Sequence) && b.key === ',' && c.isExpression()) {
       a.children.push(c)
       return a
     }
   },
   tuple(a: Token) {
-    if (a.hasType(TokenType.Sequence)) {
+    if (a.isOfType(TokenType.Sequence)) {
       return new Token(TokenType.Tuple, a.key, a.children)
     }
   },
   parenthesisExpressionRule(a: Token, b: Token, c: Token) {
     if (a.key === '(' && b.isExpression() && c.key === ')') {
-      return new Token(TokenType.Tuple, '', [b])
+      return new Token(TokenType.Parenthesis, '', [b])
+    }
+  },
+  arrayRule(a: Token, b: Token, c: Token) {
+    if (a.key === '[' && b.isOfType(TokenType.Tuple) && c.key === ']') {
+      return new Token(TokenType.Array, '', [b])
+    }
+  },
+  pipeRule(a: Token, b: Token, c: Token) {
+    if (
+      a.isExpression() &&
+      b.isOfType(TokenType.sPipe) &&
+      c.isOfType(TokenType.Word)
+    ) {
+      return new Token(TokenType.PipeExpression, '', [a, c])
     }
   },
   functionInterfaceRule(a: Token, b: Token, c: Token) {
-    if (b.key === '->') {
-      const token = new Token(TokenType.FunctionInterface)
-      if (a.hasType(TokenType.Word) || a.hasType(TokenType.Tuple)) {
-        token.children.push(a)
-      }
-      if (c.hasType(TokenType.Type) || c.hasType(TokenType.Tuple)) {
-        token.children.push(c)
-      }
-      return token
-    }
-  },
-  functionRule(a: Token, b: Token) {
+    if (b.key !== '->') return
     if (
-      a.hasType(TokenType.FunctionInterface) &&
-      b.hasType(TokenType.Statement)
-    ) {
-      const token = new Token(TokenType.Function)
-      token.children = [a, b]
-      return token
-    }
+      !a.isAnyOfTypes([
+        TokenType.Word,
+        TokenType.TypedWord,
+        TokenType.Tuple,
+        TokenType.Parenthesis,
+      ])
+    )
+      return
+    if (
+      !(
+        c.isTypeKeyword() ||
+        c.isAnyOfTypes([TokenType.Tuple, TokenType.Parenthesis])
+      )
+    )
+      return
+    return new Token(TokenType.FunctionInterface, '', [a, c])
+  },
+  functionInterfaceRuleNoOutput(a: Token, b: Token) {
+    if (
+      b.key !== '->' ||
+      !a.isAnyOfTypes([
+        TokenType.Word,
+        TokenType.TypedWord,
+        TokenType.Tuple,
+        TokenType.Parenthesis,
+      ])
+    )
+      return
+    return new Token(TokenType.FunctionInterface, '', [a])
+  },
+  functionInterfaceRuleNoInputOrOutput(a: Token) {
+    if (a.key === '->') return new Token(TokenType.FunctionInterface)
   },
   bracketsStatementRule(a: Token, b: Token, c: Token) {
+    if (a.key === '{' && b.isOfType(TokenType.StatementList) && c.key === '}') {
+      return new Token(TokenType.Block, '', [b])
+    }
+  },
+  statementListRule(a: Token, b: Token) {
     if (
-      a.key === '{' &&
-      (b.hasType(TokenType.Statement) || b.hasType(TokenType.StatementList)) &&
-      c.key === '}'
+      a.isOfType(TokenType.StatementList) &&
+      b.isOfType(TokenType.Statement)
     ) {
-      b.setType(TokenType.Statement)
-      return b
+      a.children.push(b)
+      return a
+    }
+  },
+  doubleStatementListRule(a: Token, b: Token) {
+    if (
+      a.isOfType(TokenType.StatementList) &&
+      b.isOfType(TokenType.StatementList)
+    ) {
+      a.children = a.children.concat(b.children)
+      return a
+    }
+  },
+  statementListBaseRule(a: Token) {
+    if (a.isOfType(TokenType.Statement)) {
+      return new Token(TokenType.StatementList, '', [a])
+    }
+  },
+  statementRule(a: Token) {
+    if (
+      a.isAnyOfTypes([
+        TokenType.FunctionCall,
+        TokenType.ConstantAssignment,
+        TokenType.Assignment,
+        TokenType.PipeExpression,
+      ])
+    ) {
+      return new Token(TokenType.Statement, '', [a])
+    }
+  },
+  functionExpressionRule(a: Token, b: Token) {
+    if (a.isOfType(TokenType.FunctionInterface) && b.isExpression()) {
+      return new Token(TokenType.Function, '', [a, b])
     }
   },
   assignmentRule(a: Token, b: Token, c: Token) {
-    if (a.hasType(TokenType.Word) && b.key === '=' && c.isExpression()) {
+    if (
+      a.isAnyOfTypes([TokenType.Word, TokenType.TypedWord]) &&
+      b.key === '=' &&
+      c.isExpression()
+    ) {
       return new Token(TokenType.Assignment, '=', [a, c])
     }
   },
   constantAssignmentRule(a: Token, b: Token, c: Token) {
     if (
-      a.hasType(TokenType.Word) &&
-      b.hasType(TokenType.sDoubleColon) &&
+      a.isAnyOfTypes([TokenType.Word, TokenType.TypedWord]) &&
+      b.isOfType(TokenType.sDoubleColon) &&
       c.isExpression()
     ) {
       return new Token(TokenType.ConstantAssignment, b.key, [a, c])
-    }
-  },
-  statementRule(a: Token) {
-    if (!a.hasType(TokenType.Statement) && a.hasType(TokenType.FunctionCall)) {
-      a.setType(TokenType.Statement)
-      return a
-    }
-  },
-  statementListBaseRule(a: Token, b: Token) {
-    if (a.hasType(TokenType.Statement) && b.hasType(TokenType.Statement)) {
-      const token = new Token(TokenType.StatementList)
-      token.children = [a, b]
-      return token
-    }
-  },
-  statementListRule(a: Token, b: Token) {
-    if (a.hasType(TokenType.StatementList) && b.hasType(TokenType.Statement)) {
-      a.children.push(b)
-      return a
     }
   },
 }

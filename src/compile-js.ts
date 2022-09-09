@@ -1,73 +1,173 @@
+import { objToString } from './parse'
 import { Token, TokenType } from './token'
 
-const compileRules: any = {}
+const compRules: any = {}
+const stdLib = new Set(['print', 'return', 'defer', 'delete', 'null'])
 
 export class Context {
-  words: Set<string> = new Set()
-  constants: Set<string> = new Set()
+  words: Set<string> = new Set(stdLib)
+  constants: Set<string> = new Set(stdLib)
+  types: Map<String, TokenType> = new Map()
+
+  copy() {
+    const ctx = new Context()
+    ctx.words = new Set(this.words)
+    ctx.constants = new Set(this.constants)
+    ctx.types = new Map(this.types)
+    return ctx
+  }
 }
 
-export const compileTokenToJs = (
-  token: Token,
-  context: Context = new Context()
-) => {
-  if (!Object.keys(compileRules).includes(token.getType().toString())) {
-    console.warn(`Could not compile ${token.getType()}`)
+export const rootToJs = (ast: Token[], ctx: Context) => {
+  return (
+    'const print = console.log\n\n' +
+    ast.map((token) => toJs(token, ctx)).join('\n')
+  )
+}
+
+const toJs = (token: Token, ctx: Context) => {
+  if (!token) return ''
+  if (!Object.keys(compRules).includes(token.getType().toString())) {
+    console.warn(`Could not compile ${objToString(token)}`)
     return ''
   }
-  return compileRules[token.getType()](token, context)
+  return compRules[token.getType()](token, ctx)
 }
 
-compileRules[TokenType.Assignment] = (token: Token, context: Context) => {
-  const word = token.children[0].key
-  if (context.constants.has(word)) {
-    console.warn(`Constant '${word}' cannot be assigned to!`)
+const warn = (warning: string) => {
+  console.warn(warning)
+  return `/*${warning}*/`
+}
+
+const mapChildrenWithLineBreak = (token: Token, ctx: Context) =>
+  token.children.map((child) => toJs(child, ctx)).join('\n')
+const toKey = (token: Token, _ctx: Context) => token.key
+
+compRules[TokenType.Assignment] = (token: Token, ctx: Context) => {
+  let result = ''
+  const key = token.children[0].key
+  if (ctx.constants.has(key)) {
+    result += warn(`Constant '${key}' cannot be assigned to!`)
   }
-  const result = `${
-    context.words.has(word) ? '' : 'let '
-  }${word} = ${compileTokenToJs(token.children[1], context)}`
-  context.words.add(word)
-  return result
+  const isDefined = ctx.words.has(key)
+  ctx.words.add(key)
+
+  return (
+    result +
+    `${isDefined ? '' : 'let '}${toJs(token.children[0], ctx)} = ${toJs(
+      token.children[1],
+      ctx
+    )}`
+  )
 }
 
-compileRules[TokenType.BinaryOperation] = (token: Token, context: Context) => {
-  return `${compileTokenToJs(token.children[0], context)} ${
-    token.key
-  } ${compileTokenToJs(token.children[1], context)}`
+compRules[TokenType.BinaryOperation] = (token: Token, ctx: Context) => {
+  return `${toJs(token.children[0], ctx)} ${token.key} ${toJs(
+    token.children[1],
+    ctx
+  )}`
 }
 
-compileRules[TokenType.Comment] = (token: Token, _context: Context) => {
+compRules[TokenType.Comment] = (token: Token, _ctx: Context) => {
   return `// ${token.key}`
 }
 
-compileRules[TokenType.ConstantAssignment] = (
-  token: Token,
-  context: Context
-) => {
-  const word = token.children[0].key
-  if (context.words.has(word)) {
-    console.warn(`Constant '${word}' has already been defined!`)
+compRules[TokenType.ConstantAssignment] = (token: Token, ctx: Context) => {
+  let result = ''
+  const key = token.children[0].key
+  if (ctx.words.has(key)) {
+    result += warn(`Constant '${key}' has already been defined!`)
   }
-  const result = `const ${word} = ${compileTokenToJs(
-    token.children[1],
-    context
-  )}`
-  context.words.add(word)
-  context.constants.add(word)
-  return result
+  ctx.words.add(key)
+  ctx.constants.add(key)
+
+  return (
+    result +
+    `const ${toJs(token.children[0], ctx)} = ${toJs(token.children[1], ctx)}`
+  )
 }
 
-compileRules[TokenType.Tuple] = (token: Token, context: Context) => {
-  return `(${token.children
-    .map((child) => compileTokenToJs(child, context))
-    .join(', ')})`
+compRules[TokenType.PipeExpression] = (token: Token, ctx: Context) => {
+  return `${toJs(token.children[1], ctx)}(${toJs(token.children[0], ctx)})`
 }
 
-const toKey = (token: Token, _context: Context) => token.key
+compRules[TokenType.Tuple] = (token: Token, ctx: Context) => {
+  return `${token.children.map((child) => toJs(child, ctx)).join(', ')}`
+}
 
-compileRules[TokenType.vBool] = toKey
-compileRules[TokenType.vChar] = toKey
-compileRules[TokenType.vFloat] = toKey
-compileRules[TokenType.vInt] = toKey
-compileRules[TokenType.vString] = (token: Token, _context: Context) =>
-  `'${token.key}'`
+compRules[TokenType.Parenthesis] = (token: Token, ctx: Context) => {
+  return `(${toJs(token.children[0], ctx)})`
+}
+
+compRules[TokenType.Array] = (token: Token, ctx: Context) => {
+  return `[${toJs(token.children[0], ctx)}]`
+}
+
+compRules[TokenType.FunctionCall] = (token: Token, ctx: Context) => {
+  return `${toJs(token.children[0], ctx)}${toJs(token.children[1], ctx)}`
+}
+
+compRules[TokenType.FunctionInterface] = (token: Token, ctx: Context) => {
+  return `(${toJs(token.children[0], ctx)}) =>`
+}
+
+const findWords = (token: Token) => {
+  let words = token.isAnyOfTypes([TokenType.Word, TokenType.TypedWord])
+    ? [token.key]
+    : []
+  token.children.forEach((child) => {
+    words = words.concat(findWords(child))
+  })
+  return words
+}
+
+const findTypes = (token: Token) => {
+  const types: Map<string, TokenType> = token.isOfType(TokenType.TypedWord)
+    ? new Map([[token.children[1].key, token.children[0].getType()]])
+    : new Map()
+  token.children.forEach((child) => {
+    findTypes(child).forEach((value, key) => types.set(key, value))
+  })
+  return types
+}
+
+compRules[TokenType.Function] = (token: Token, ctx: Context) => {
+  const newCtx = ctx.copy()
+  findWords(token.children[0]).forEach((word) => newCtx.words.add(word))
+  findTypes(token.children[0]).forEach((value, key) =>
+    newCtx.types.set(key, value)
+  )
+  return `${toJs(token.children[0], newCtx)}${toJs(token.children[1], newCtx)}`
+}
+
+compRules[TokenType.TypedWord] = (token: Token, ctx: Context) => {
+  let result = ''
+  const word = token.children[1].key
+  const tokenType = token.children[0].getType()
+  const tokenTypePrev = ctx.types.get(word)
+  if (tokenTypePrev && tokenTypePrev !== tokenType) {
+    result += warn(
+      `Mismatch of types: was ${TokenType[tokenTypePrev]}, got ${TokenType[tokenType]}!`
+    )
+  }
+  ctx.types.set(word, tokenType)
+  return result + word
+}
+
+compRules[TokenType.Statement] = mapChildrenWithLineBreak
+compRules[TokenType.StatementList] = mapChildrenWithLineBreak
+compRules[TokenType.Block] = (token: Token, ctx: Context) =>
+  `{\n${mapChildrenWithLineBreak(token, ctx)}\n}`
+
+compRules[TokenType.vBool] = toKey
+compRules[TokenType.vChar] = toKey
+compRules[TokenType.vFloat] = toKey
+compRules[TokenType.vInt] = toKey
+compRules[TokenType.Word] = (token: Token, ctx: Context) => {
+  let result = ''
+  if (!ctx.words.has(token.key)) {
+    result += warn(`Word '${token.key}' has not been defined!`)
+  }
+  return result + token.key
+}
+compRules[TokenType.vString] = (token: Token, _ctx: Context) => `'${token.key}'`

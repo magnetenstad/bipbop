@@ -1,0 +1,21 @@
+
+output :: text -> print("<" + text + ">")
+
+helloWorld :: -> output("Hello world!")
+
+half :: x -> x / 2
+sum :: a, b -> a + b
+
+main :: -> {
+  output("\n")
+  helloWorld()
+
+  x = 10
+  x = x + 10
+  y :: 30
+  z :: x + y
+
+  y, z |> sum |> half |> output
+}
+
+main()

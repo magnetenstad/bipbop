@@ -1,26 +1,8 @@
---- works ---
-
-helloWorld :: -> output("Hello world!")
-helloWorld()
-
-half :: int x -> float return(x / 2)
-
-print :: string text -> {
-  output(text)
-}
-
-sum :: int a, int b -> int {
-  return(a + b)
-}
-
-swap :: int a, int b -> int, int {
-  return(b, a)
-}
 
 --- WIP ---
 
 --- polymorphism? or just type aliases ---
-
+---
 type number :: int | float
 type string :: array<char>
 
@@ -39,4 +21,4 @@ dynamicArguments :: int args.. -> {
     print(arg)
   }
 }
-
+---

@@ -10,19 +10,13 @@ import {
   numberRules,
 } from './rules.js'
 
-export function runBip(data: string) {
-  console.log('Start lex...')
+export function lexAndParse(data: string) {
   const tokens = lex(data)
-  console.log('Start parse...')
-  const ast = parseTokens(tokens)
-  console.log('Log results..')
-  return ast
+  return parseTokens(tokens)
 }
 
-export function printAst(ast: Token[]) {
-  console.log(
-    util.inspect(ast, { showHidden: false, depth: null, colors: true })
-  )
+export function objToString(obj: Token[] | Token) {
+  return util.inspect(obj, { showHidden: false, depth: null, colors: true })
 }
 
 function lex(data: string) {
@@ -36,9 +30,9 @@ function parseTokens(tokens: Token[]) {
   applyRules(numberRules, tokens)
   applyRules(wordRules, tokens)
   applyRules(stringAndCommentRules, tokens)
-  tokens = tokens.filter((t) => !t.hasType(TokenType.Comment))
+  tokens = tokens.filter((t) => !t.isOfType(TokenType.Comment))
   applyRules(whiteSpaceRules, tokens)
-  tokens = tokens.filter((t) => !t.hasType(TokenType.WhiteSpace))
+  tokens = tokens.filter((t) => !t.isOfType(TokenType.WhiteSpace))
   applyRules(noWhiteSpaceRules, tokens)
   return tokens
 }

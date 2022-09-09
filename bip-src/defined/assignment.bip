@@ -1,5 +1,26 @@
---- works ---
 
-x = 100
-x = 400
-y :: 200.0
+--- basic ---
+
+x = 1
+y = 2
+x = 3
+
+--- constants ---
+
+z :: 1
+x :: 0 --- should warn ---
+
+--- undefined words ---
+
+print(undefined) --- should warn ---
+
+undefined = "Not anymore!"
+
+print(undefined) --- should not warn ---
+
+--- typed words ---
+
+int n = 0
+int i = 0
+float a = 1
+int a = 1 --- should warn ---

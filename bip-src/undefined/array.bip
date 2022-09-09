@@ -1,4 +1,4 @@
 
-array<string> data = ["a", "b", "c"]
+data = ["a", "b", "c"]
 
 defer delete(data)
