@@ -18,6 +18,11 @@ export class Context {
   }
 }
 
+const warn = (warning: string) => {
+  console.warn(warning)
+  return `/*${warning}*/`
+}
+
 export const rootToJs = (ast: Token[], ctx: Context) => {
   return (
     'const print = console.log\n\n' +
@@ -28,15 +33,9 @@ export const rootToJs = (ast: Token[], ctx: Context) => {
 const toJs = (token: Token, ctx: Context) => {
   if (!token) return ''
   if (!Object.keys(compRules).includes(token.getType().toString())) {
-    console.warn(`Could not compile ${objToString(token)}`)
-    return ''
+    return warn(`Could not compile ${objToString(token, { colors: false })}`)
   }
   return compRules[token.getType()](token, ctx)
-}
-
-const warn = (warning: string) => {
-  console.warn(warning)
-  return `/*${warning}*/`
 }
 
 const mapChildrenWithLineBreak = (token: Token, ctx: Context) =>

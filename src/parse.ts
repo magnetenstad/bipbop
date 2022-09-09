@@ -15,8 +15,11 @@ export function lexAndParse(data: string) {
   return parseTokens(tokens)
 }
 
-export function objToString(obj: Token[] | Token) {
-  return util.inspect(obj, { showHidden: false, depth: null, colors: true })
+export function objToString(
+  obj: Token[] | Token,
+  { colors }: { colors: boolean } = { colors: true }
+) {
+  return util.inspect(obj, { showHidden: false, depth: null, colors })
 }
 
 function lex(data: string) {

@@ -15,7 +15,7 @@ if (dir) {
   )
   dir.apply((file: File) => {
     const ast = lexAndParse(file.data)
-    // console.log(objToString(ast))
+    console.log(objToString(ast))
     file.data = rootToJs(ast, new Context())
     file.name = file.name.replace('.bip', '.js')
   })
@@ -24,18 +24,19 @@ if (dir) {
   dir.write()
 
   dir.apply((file) => {
+    console.log(`Running ${file.name}\n`)
     exec(
       `node ${file.location.replace('bip-src', 'bip-lib')}${file.name}`,
       (error, stdout, stderr) => {
         if (error) {
-          console.log(`error: ${error.message}`)
+          console.log(`error:\n${error.message}`)
           return
         }
         if (stderr) {
-          console.log(`stderr: ${stderr}`)
+          console.log(`stderr:\n${stderr}`)
           return
         }
-        console.log(`stdout: ${stdout}`)
+        console.log(stdout)
       }
     )
   })

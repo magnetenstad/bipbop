@@ -5,12 +5,21 @@
 ---
 type number :: int | float
 type string :: array<char>
+---
 
 okBuddy ::
-    str first  = "Ok",
-    str second = "Buddy",
-    str third  = "Cool"
-    -> str {
+    string first,
+    string second,
+    string third
+    -> string {
+  return(first + second + third)
+}
+
+okBuddy2 ::
+    first  = "Ok",
+    second = "Buddy",
+    third  = "Cool"
+    -> {
   return(first + second + third)
 }
 
@@ -21,4 +30,3 @@ dynamicArguments :: int args.. -> {
     print(arg)
   }
 }
----

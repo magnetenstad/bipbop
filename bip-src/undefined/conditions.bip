@@ -1,0 +1,63 @@
+
+isSunny = false
+isCold = false
+
+isSunny ?? {
+  print("Enjoy the sun")
+} !! {
+  print("No need to go outside")
+}
+
+isSunny
+  ?? print("Enjoy the sun")
+  !! print("No need to go outside")
+
+isCold
+  ?? print("Put on a jacket")
+  !? print("Wear shorts")
+
+!isCold ? {
+  print("It's warm")
+}
+
+isSunny ? {
+  print("Enjoy the sun")
+}
+: isCold ? {
+  print("No need to go outside")
+}
+: {
+
+}
+
+
+toDo =
+  isSunny ? "Enjoy the sun"
+: isCold  ? "No need to go outside"
+:           "Do whatever"
+
+toDo = true match {
+  == isSunny ? "Enjoy the sun"
+  == isCold  ? "No need to go outside"
+} ?? "Do whatever"
+
+toDo = match animal {
+  == "tiger" ? "Run away!"
+  == "koala" ? "Stay for a cuddle"
+  .isPredator() ? "Watch out!"
+}
+
+match isSunny {
+  true ? print("Enjoy the sun")
+  false ? print("No need to go outside")
+}
+
+switch {
+  isSunny { print("Enjoy the sun") }
+  !isSunny { print("No need to go outside") }
+}
+
+when isSunny {
+  $: print("Enjoy the sun")
+  !$: print("No need to go outside")
+}

@@ -1,4 +1,3 @@
---- works ---
 
 a = random()
 b = f(x)

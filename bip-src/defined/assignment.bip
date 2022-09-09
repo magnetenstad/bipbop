@@ -8,7 +8,6 @@ x = 3
 --- constants ---
 
 z :: 1
-x :: 0 --- should warn ---
 
 --- undefined words ---
 
@@ -16,7 +15,7 @@ print(undefined) --- should warn ---
 
 undefined = "Not anymore!"
 
-print(undefined) --- should not warn ---
+print(undefined)
 
 --- typed words ---
 
