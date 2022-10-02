@@ -43,6 +43,11 @@ const d = 'a constant'
 The following Bip
 
 ```cpp
+doStuff :: a, b -> {
+  doThis(a)
+  doThat(b)
+}
+
 greet :: greeting -> print(greeting)
 greet_hello :: -> greet("hello")
 
@@ -52,6 +57,11 @@ greet_hello()
 compiles to the following Javascript
 
 ```js
+const doStuff = (a, b) => {
+  doThis(a)
+  doThat(b)
+}
+
 const greet = (greeting) => console.log(greeting)
 const greet_hello = () => greet('hello')
 
@@ -60,7 +70,7 @@ greet_hello()
 
 ### Conditions
 
-The following bip
+The following Bip
 
 ```cpp
 x > 0 ? {
@@ -125,5 +135,5 @@ compiles to the following Javascript
 ```js
 const half = (x) => x / 2
 const sum = (a, b) => a + b
-console.log(half(sum(y, z)))
+console.log(half(sum(4, 8)))
 ```
