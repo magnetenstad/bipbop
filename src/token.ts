@@ -55,14 +55,13 @@ export class Token {
         TokenType.Word,
         TokenType.FunctionCall,
         TokenType.Tuple,
-        TokenType.FunctionInterface,
         TokenType.Function,
         TokenType.BinaryOperation,
         TokenType.Parenthesis,
         TokenType.TypedWord,
-        TokenType.FunctionInterface,
         TokenType.Array,
         TokenType.PipeExpression,
+        TokenType.Else,
       ])
     )
   }
@@ -86,6 +85,11 @@ export enum TokenType {
   sThinArrow,
   sDoubleEquals,
   sEquals,
+  sLess,
+  sGreater,
+  sLessEquals,
+  sGreaterEquals,
+  sNotEquals,
   sPlus,
   sMinus,
   sTimes,
@@ -94,6 +98,7 @@ export enum TokenType {
   sEscaped,
   sString,
   sPipe,
+  sIf,
 
   // Keywords
   kChar,
@@ -115,7 +120,9 @@ export enum TokenType {
   Type,
   Comment,
   Assignment,
+  AssignmentStart,
   ConstantAssignment,
+  ConstantAssignmentStart,
   Tuple,
   Array,
   FunctionCall,
@@ -125,9 +132,11 @@ export enum TokenType {
   StatementList,
   Parenthesis,
   BinaryOperation,
-  Conditional,
+  If,
+  Condition,
   TypedWord,
   Sequence,
   Block,
   PipeExpression,
+  Else,
 }

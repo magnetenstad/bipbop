@@ -28,6 +28,8 @@ export const rootToJs = (ast: Token[], ctx: Context) => {
     'const print = console.log\n\n' +
     ast.map((token) => toJs(token, ctx)).join('\n')
   )
+    .split('\n')
+    .join(';\n')
 }
 
 const toJs = (token: Token, ctx: Context) => {
@@ -44,7 +46,8 @@ const toKey = (token: Token, _ctx: Context) => token.key
 
 compRules[TokenType.Assignment] = (token: Token, ctx: Context) => {
   let result = ''
-  const key = token.children[0].key
+  const word = token.children[0].children[0]
+  const key = word.key
   if (ctx.constants.has(key)) {
     result += warn(`Constant '${key}' cannot be assigned to!`)
   }
@@ -53,11 +56,24 @@ compRules[TokenType.Assignment] = (token: Token, ctx: Context) => {
 
   return (
     result +
-    `${isDefined ? '' : 'let '}${toJs(token.children[0], ctx)} = ${toJs(
+    `${isDefined ? '' : 'let '}${toJs(word, ctx)} = ${toJs(
       token.children[1],
       ctx
     )}`
   )
+}
+
+compRules[TokenType.ConstantAssignment] = (token: Token, ctx: Context) => {
+  let result = ''
+  const word = token.children[0].children[0]
+  const key = word.key
+  if (ctx.words.has(key)) {
+    result += warn(`Constant '${key}' has already been defined!`)
+  }
+  ctx.words.add(key)
+  ctx.constants.add(key)
+
+  return result + `const ${toJs(word, ctx)} = ${toJs(token.children[1], ctx)}`
 }
 
 compRules[TokenType.BinaryOperation] = (token: Token, ctx: Context) => {
@@ -69,21 +85,6 @@ compRules[TokenType.BinaryOperation] = (token: Token, ctx: Context) => {
 
 compRules[TokenType.Comment] = (token: Token, _ctx: Context) => {
   return `// ${token.key}`
-}
-
-compRules[TokenType.ConstantAssignment] = (token: Token, ctx: Context) => {
-  let result = ''
-  const key = token.children[0].key
-  if (ctx.words.has(key)) {
-    result += warn(`Constant '${key}' has already been defined!`)
-  }
-  ctx.words.add(key)
-  ctx.constants.add(key)
-
-  return (
-    result +
-    `const ${toJs(token.children[0], ctx)} = ${toJs(token.children[1], ctx)}`
-  )
 }
 
 compRules[TokenType.PipeExpression] = (token: Token, ctx: Context) => {
@@ -107,7 +108,18 @@ compRules[TokenType.FunctionCall] = (token: Token, ctx: Context) => {
 }
 
 compRules[TokenType.FunctionInterface] = (token: Token, ctx: Context) => {
-  return `(${toJs(token.children[0], ctx)}) =>`
+  return `(${toJs(token.children[0], ctx)}) => `
+}
+
+compRules[TokenType.If] = (token: Token, ctx: Context) => {
+  return `(${toJs(token.children[0].children[0], ctx)}) ? (${toJs(
+    token.children[1],
+    ctx
+  )})`
+}
+
+compRules[TokenType.Else] = (token: Token, ctx: Context) => {
+  return `${toJs(token.children[0], ctx)} : ${toJs(token.children[1], ctx)}`
 }
 
 const findWords = (token: Token) => {
@@ -155,8 +167,16 @@ compRules[TokenType.TypedWord] = (token: Token, ctx: Context) => {
 
 compRules[TokenType.Statement] = mapChildrenWithLineBreak
 compRules[TokenType.StatementList] = mapChildrenWithLineBreak
-compRules[TokenType.Block] = (token: Token, ctx: Context) =>
-  `{\n${mapChildrenWithLineBreak(token, ctx)}\n}`
+compRules[TokenType.Block] = (token: Token, ctx: Context) => {
+  if (token.children[0].isOfType(TokenType.StatementList)) {
+    const copy = [...token.children[0].children]
+    const last = copy.pop()
+    return `(() => {\n${copy
+      .map((child) => toJs(child, ctx))
+      .join('\n')}\nreturn ${last ? toJs(last, ctx) : undefined}\n})()`
+  }
+  return `(() => { return ${toJs(token.children[0], ctx)} })()`
+}
 
 compRules[TokenType.vBool] = toKey
 compRules[TokenType.vChar] = toKey

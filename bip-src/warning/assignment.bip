@@ -11,11 +11,11 @@ z :: 1
 
 --- undefined words ---
 
-print(undefined) --- should warn ---
+print(undefinedVariable) --- should warn ---
 
-undefined = "Not anymore!"
+undefinedVariable = "Not anymore!"
 
-print(undefined)
+print(undefinedVariable)
 
 --- typed words ---
 

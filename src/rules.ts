@@ -71,6 +71,13 @@ export const symbolRules = {
   sEscaped: doubleSymbolRule(TokenType.sEscaped, '\\'),
   sString: singleSymbolRule(TokenType.sString, '"'),
   sPipe: doubleSymbolRule(TokenType.sPipe, '|>'),
+  sIf: singleSymbolRule(TokenType.sIf, '?'),
+  sEquals: doubleSymbolRule(TokenType.sEquals, '=='),
+  sNotEquals: doubleSymbolRule(TokenType.sNotEquals, '!='),
+  sLess: doubleSymbolRule(TokenType.sLess, '<'),
+  sGreater: doubleSymbolRule(TokenType.sGreater, '>'),
+  sLessEquals: doubleSymbolRule(TokenType.sLessEquals, '<='),
+  sGreaterEquals: doubleSymbolRule(TokenType.sGreaterEquals, '>='),
 }
 
 // Number rules
@@ -219,6 +226,22 @@ export const noWhiteSpaceRules = {
       return new Token(TokenType.FunctionCall, '', [a, b])
     }
   },
+  booleanOperation(a: Token, b: Token, c: Token) {
+    if (
+      a.isExpression() &&
+      b.isAnyOfTypes([
+        TokenType.sEquals,
+        TokenType.sNotEquals,
+        TokenType.sLess,
+        TokenType.sGreater,
+        TokenType.sLessEquals,
+        TokenType.sGreaterEquals,
+      ]) &&
+      c.isExpression()
+    ) {
+      return new Token(TokenType.BinaryOperation, b.key, [a, c])
+    }
+  },
   sequenceRule(a: Token, b: Token, c: Token) {
     if (a.isExpression() && b.key === ',' && c.isExpression()) {
       return new Token(TokenType.Sequence, '', [a, c])
@@ -290,8 +313,12 @@ export const noWhiteSpaceRules = {
   functionInterfaceRuleNoInputOrOutput(a: Token) {
     if (a.key === '->') return new Token(TokenType.FunctionInterface)
   },
-  bracketsStatementRule(a: Token, b: Token, c: Token) {
-    if (a.key === '{' && b.isOfType(TokenType.StatementList) && c.key === '}') {
+  blockRule(a: Token, b: Token, c: Token) {
+    if (
+      a.key === '{' &&
+      (b.isOfType(TokenType.StatementList) || b.isExpression()) &&
+      c.key === '}'
+    ) {
       return new Token(TokenType.Block, '', [b])
     }
   },
@@ -335,22 +362,66 @@ export const noWhiteSpaceRules = {
       return new Token(TokenType.Function, '', [a, b])
     }
   },
-  assignmentRule(a: Token, b: Token, c: Token) {
+  ifRule(a: Token, b: Token) {
     if (
-      a.isAnyOfTypes([TokenType.Word, TokenType.TypedWord]) &&
-      b.key === '=' &&
-      c.isExpression()
+      a.isOfType(TokenType.Condition) &&
+      b.isAnyOfTypes([
+        TokenType.Block,
+        TokenType.StatementList,
+        TokenType.Statement,
+      ])
     ) {
-      return new Token(TokenType.Assignment, '=', [a, c])
+      return new Token(TokenType.If, '', [a, b])
     }
   },
-  constantAssignmentRule(a: Token, b: Token, c: Token) {
+  elseRule(a: Token, b: Token, c: Token) {
+    if (
+      a.isOfType(TokenType.If) &&
+      b.key === ':' &&
+      c.isAnyOfTypes([
+        TokenType.Block,
+        TokenType.StatementList,
+        TokenType.Statement,
+      ])
+    ) {
+      return new Token(TokenType.Else, '', [a, c])
+    }
+  },
+  conditionRule(a: Token, b: Token) {
+    if (a.isExpression() && b.isOfType(TokenType.sIf)) {
+      return new Token(TokenType.Condition, '', [a, b])
+    }
+  },
+  assignmentRule(a: Token, b: Token) {
+    if (a.isOfType(TokenType.AssignmentStart) && b.isExpression()) {
+      return new Token(TokenType.Assignment, b.key, [a, b])
+    }
+  },
+  constantAssignmentRule(a: Token, b: Token) {
+    if (a.isOfType(TokenType.ConstantAssignmentStart) && b.isExpression()) {
+      return new Token(TokenType.ConstantAssignment, b.key, [a, b])
+    }
+  },
+  assignmentStartRule(a: Token, b: Token) {
     if (
       a.isAnyOfTypes([TokenType.Word, TokenType.TypedWord]) &&
-      b.isOfType(TokenType.sDoubleColon) &&
-      c.isExpression()
+      b.key === '='
     ) {
-      return new Token(TokenType.ConstantAssignment, b.key, [a, c])
+      return new Token(TokenType.AssignmentStart, '', [a, b])
+    }
+  },
+  constantAssignmentStartRule(a: Token, b: Token) {
+    if (
+      a.isAnyOfTypes([TokenType.Word, TokenType.TypedWord]) &&
+      b.isOfType(TokenType.sDoubleColon)
+    ) {
+      return new Token(TokenType.ConstantAssignmentStart, '', [a, b])
+    }
+  },
+  expressionStatementRule(a: Token, b: Token) {
+    if (a.isOfType(TokenType.StatementList) && b.isExpression()) {
+      a.children.push(new Token(TokenType.Statement, '', [b]))
+      return a
     }
   },
 }
