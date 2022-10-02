@@ -2,6 +2,18 @@
 
 A proof-of-concept programming language that compiles to Javascript.
 
+> Will be coming to NPM soon.
+
+## Getting started
+
+Clone the repo, write some bip in `bip-src`, then
+
+```
+npm start <filename>
+```
+
+This will print the abstract syntax tree, compile your bip file to a javascript file in `bip-lib`, and finally run the javascript.
+
 ## Examples
 
 ### Hello world
