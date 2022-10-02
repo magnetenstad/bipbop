@@ -97,7 +97,7 @@ x > 0 ? {
 compiles to the following Javascript
 
 ```js
-print(
+console.log(
   x > 0
     ? (() => {
         console.log('x is positive')
