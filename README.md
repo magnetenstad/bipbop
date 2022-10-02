@@ -63,7 +63,7 @@ greet_hello()
 The following bip
 
 ```cpp
-points = x > 0 ? {
+x > 0 ? {
   print("x is positive")
 } : {
   print("x is not positive")
