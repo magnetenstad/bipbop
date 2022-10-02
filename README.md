@@ -64,9 +64,9 @@ The following bip
 
 ```cpp
 points = x > 0 ? {
-  print("x is positive") 100
+  print("x is positive")
 } : {
-  print("x is not positive") -100
+  print("x is not positive")
 }
 ```
 
