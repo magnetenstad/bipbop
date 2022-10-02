@@ -75,10 +75,10 @@ compiles to the following Javascript
 ```js
 x > 0
   ? (() => {
-      return print('x is positive')
+      return console.log('x is positive')
     })()
   : (() => {
-      return print('x is not positive')
+      return console.log('x is not positive')
     })()
 ```
 
@@ -100,11 +100,11 @@ compiles to the following Javascript
 print(
   x > 0
     ? (() => {
-        print('x is positive')
+        console.log('x is positive')
         return 100
       })()
     : (() => {
-        print('x is not positive')
+        console.log('x is not positive')
         return 0 - 100
       })()
 )
